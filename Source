@@ -1,1 +1,5165 @@
+# Bomberman
+// animacion
+# include "animacion.hpp"
+
+Animacion Animacion :: (* SDL_Surface img_grilla, int filas, int Columnas, char * marcos, int x, int y, int id):
+    control_fra (frames) {
+
+    this-> imgGrilla = img_grilla;
+    this-> x = x = rect.x;
+    this-> y = rect.y = y;
+    rect.w = rect.h = 16;
+    self_kill = false;
+    type = ANIMACION;
+    this-> ID = id; 
+    f = filas;
+    c = Columnas;  
+    delay = 0;
+    loop = 0;
+    indexInicioAniEnd = 0;
+}
+
+Animacion vacío :: actualización (Uint8 * Teclas) {
+
+	si (++ retardo> DELAY_CAMBIO) {
+        si (control_fra.avanzar ()) {
+            si (loop = - 1 && - bucle <0)
+                inhabilitar();
+            else if (indexInicioAniEnd! = 0) {
+                control_fra.setInicioAnimacion (indexInicioAniEnd);
+                indexInicioAniEnd = 0;
+                control_fra.reiniciar ();
+            }
+        }
+        delay = 0;
+	}
+}
+Animacion vacío :: desactivar () {
+    matar();
+}
+
+Animacion vacío :: setCuadrosFrames (marcos char *) {
+    control_fra.setCuadros (frames);
+}
+
+Animacion vacío :: empate (SDL_Surface pantalla *) {
+    si (x + 16> 0 && x <W_SCREEN && y <H_SCREEN && y + 16> 0)
+        imprimir_desde_grilla (imgGrilla, control_fra.cuadro (), pantalla, x, y, f, c, 0);
+}
+
+
+// bloque 
+
+# include "bloque.hpp"
+
+Bloque Bloque :: (* Juego juego, int x, int y, int id):
+    Animacion (NULL, 0,0, "0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,4,4,5", x, Y, id) {
+    this-> = juego juego;
+    idTileBloque = juego-> getIdTile ();
+    type = BLOQUE;
+}
+
+Bloque vacío :: desactivar () {
+    si (juego-> isBloqueItem (x, y)) {
+        juego-> addSprite (PUNTO, x, y, juego-> getTipoNuevoItem (true));
+    }
+    juego-> romperBloque (x, y);
+    matar();
+}
+
+Bloque vacío :: empate (* SDL_Surface pantalla) {
+    si (x + 16> 0 && x <W_SCREEN && y <H_SCREEN && y + 16> 0)
+        imprimir_desde_grilla (juego-> getImagen (IMG_BLOQUES_FIRE), getCuadro () + idTileBloque * 6, pantalla, x, y, 4,6,0);
+}
+
+// Bomba 
+
+# include "bomba.hpp"
+
+Bomba :: Bomba (SDL_Surface * imgBomba, int x, int y, int Alcance, int Lanzador, int id):
+    Animacion (imgBomba, 1,3, "0,0,0,1,1,1,2,2,2,2,2,2,1,1,1,0,0,0", x, y, carné de identidad){
+    this-> Lanzador Lanzador =;
+    this-> = Alcance Alcance;
+    type = BOMBA;
+    loop = 2;
+}
+
+
+// cgroup 
+
+# include "CGroup.hpp"
+
+Grupo :: Grupo (Interfaz * matriz) {
+    this-> parent = padre;
+}
+
+
+Grupo vacío :: add (Sprite * nu) {
+    v_personajes.push_back (nu);
+}
+
+/ *
+Grupo vacío :: kill (* Sprite del, bool del_mem) {
+    Lista <Sprite *> :: iterador p_Sprite = find (v_personajes.begin (), v_personajes.end (), del);
+    si (p_Sprite! = v_personajes.end ()) {
+
+        // Sí se eliminara tambien no solo la Referencia del grupo, ademas Sino de la memoria
+        si (del_mem) {
+            Eliminar (* p_Sprite);
+            (* P_Sprite) = NULL;
+        }
+        
+        v_personajes.erase (p_Sprite);
+    }
+} * /
+
+/ *
+bool Grupo :: contener (Sprite * autobús) {
+     // Lo vuscamos Usando iteradores
+    Lista <Sprite *> :: iterador p_Sprite = find (v_personajes.begin (), v_personajes.end (), autobús);
+    
+    // Si Es Distinto del último Porque Es Lo Contiene
+    volver p_Sprite = v_personajes.end (!);
+} * /
+/ *
+Sprite * Grupo :: chocan (Sprite * coli) {
+    Lista <Sprite *> :: = iterador p_Sprite v_personajes.begin ();
+    
+    mientras que (p_Sprite! = v_personajes.end ()) {
+         si (rects_colisionan (colitis> rect (), (* p_Sprite) -> rect ())) {
+              volver (* p_Sprite);
+         }
+         p_Sprite ++;
+        
+    }
+    
+    NULL regresar;
+    
+} * /
+Grupo vacío :: borrado (Sprite * borrar) {
+     // Lo Buscamos Usando iteradores
+    deque <Sprite *> :: iterador p_Sprite = find (v_personajes.begin (), v_personajes.end (), borrar);
+    if ((p_Sprite == v_personajes.end () && (* p_Sprite) == borrar) || p_Sprite! = v_personajes.end ())
+        v_personajes.erase (p_Sprite);
+}
+:: Grupo vacío de actualización (* UINT8 teclas) {
+    deque <Sprite *> :: = iterador p_Sprite v_personajes.begin ();
+    
+    if (! claves) // Si No teclas paso las obtenemos las
+        llaves = SDL_GetKeyState (0);
+        
+    
+    mientras que (p_Sprite! = v_personajes.end ()) {
+        (* P_Sprite) -> Actualización (teclas);
+         si (p_Sprite! = v_personajes.end ()) {
+             if ((* p_Sprite) -> isMuerto ()) {
+                padre-> killSprite ((* p_Sprite) -> getTipo (), (* p_Sprite) -> getId ());
+                Eliminar (* p_Sprite);
+                (* P_Sprite) = 0x0;
+                p_Sprite = v_personajes.erase (p_Sprite);
+             }más{
+                 p_Sprite ++;
+              }
+        }
+    }
+}
+
+Grupo vacío :: empate (SDL_Surface * Do) {
+
+   para (size_t i = 0; i <v_personajes.size (); i ++)
+        v_personajes [i] -> sorteo (su);
+}
+
+Grupo :: ~ Grupo () {
+    v_personajes.clear ();
+}
+
+
+// Animacion de control 
+
+#include <iostream>
+# include "Control_Animacion.h"
+
+
+using namespace std;
+
+
+ControlAnimacion :: ControlAnimacion (char * marcos) {
+    if (marcos)
+        setCuadros (frames);
+    más{
+    }
+
+}
+ControlAnimacion vacío :: setCuadros (marcos char *) {
+    int i = 0;
+    charlas frames_tmp [MAX_NUM_CUADROS];
+    char * proximo;    
+    
+    strncpy (frames_tmp, marcos, MAX_NUM_CUADROS);
+    // Trabajamos con la UNA Copia de Los Cuadros indicados
+
+    para (proximo = strtok (frames_tmp, ""); proximo; i ++) {
+
+	// Desmembramos la Cadena Separada por comas
+
+	this-> Cuadros [i] = atoi (proximo);
+	proximo = strtok (NULL, ", \ 0");
+    }
+
+    // variables de las Inicializamos
+    
+    this-> Cuadros [i] = -1;
+    this-> Paso = 0;
+    inicio = 0;
+	
+#ifdef DEBUG    
+    cout << "Control_Animacion :: Control_Animacion ()" << endl;
+#terminara si
+}
+
+int ControlAnimacion :: cuadro (void) {
+    [regresar cuadros Paso];
+}
+
+
+bool ControlAnimacion :: Avanzar (void) {	
+
+    si (cuadros [Paso ++] == -1) {
+	   Paso = inicio;
+	   return true;
+    }
+    
+    falso retorno;
+}
+
+
+ControlAnimacion vacío :: Reiniciar (void) {
+
+    // Volvemos al Principio
+
+    Paso = inicio;
+}
+
+
+bool ControlAnimacion :: es_primer_cuadro (void) {
+
+    si (== Paso Home)
+	   return true;
+
+    falso retorno;
+}
+
+ControlAnimacion :: ~ ControlAnimacion () {
+
+#ifdef DEBUG
+    cout << "Control_Animacion :: ~ Control_Animacion ()" << endl;
+#terminara si
+}
+
+
+// Reproductor de control 
+
+# include "control_player.hpp"
+
+using namespace std;
+
+ControlPlayer :: ControlPlayer (bool INI) {
+    si (INI) Iniciar ();
+    
+};
+
+void ControlPlayer :: Iniciar () {
+    for (int i = 0; i <_TECLAS; i ++) {
+        es_boton_joystick [i] = false;
+        es_direccion_joystick [i] = false;
+        keys_players [i] = static_cast <SDLKey> (0);
+        strcpy (nombres_joysticks [i], "pecado asig.");
+    }
+}
+
+bool ControlPlayer :: cargar (char ruta [], int ini) {
+    FS2 ifstream (RUTA, en ios :: | ios :: binarios);
+    if (! FS2) {
+        cerr << "control leyendo error es:" << Ruta << endl;
+        si (INI) Iniciar ();
+        falso retorno;
+    }más{
+        fs2.read (reinterpret_cast <char *> (este), sizeof (ControlPlayer));
+        fs2.close ();
+    }
+    return true;
+};
+void ControlPlayer :: GUARDAR (char ruta []) {
+    FS2 ofstream (RUTA, ios :: out | ios :: binarios);    
+    fs2.write (reinterpret_cast <char *> (este), sizeof (ControlPlayer));
+    fs2.close ();
+};
+
+char * ControlPlayer :: getName (TeclaPlayer Tecla) {
+    nombres_joysticks [Tecla] volver;
+};
+bool ControlPlayer :: isBotonJoystick (TeclaPlayer Tecla) {
+    volver es_boton_joystick [Tecla];
+};
+bool ControlPlayer :: isDireccionJoystick (int Tecla) {
+    volver es_direccion_joystick [Tecla];
+};
+SDLKey ControlPlayer :: getKey (TeclaPlayer Tecla) {
+    keys_players [Tecla] volver;
+};
+
+void ControlPlayer :: setName (TeclaPlayer Tecla, nombre const char []) {
+    strcpy (nombres_joysticks [Tecla], nombre);
+};
+anulará ControlPlayer :: setIsBotonJoystick (TeclaPlayer Tecla, bool nuevo) {
+    es_boton_joystick [Tecla] = nuevo;
+};
+anulará ControlPlayer :: setIsDireccionJoystick (int Tecla, bool nuevo) {
+    es_direccion_joystick [Tecla] = nuevo;
+};
+void ControlPlayer :: setKey (TeclaPlayer Tecla, SDLKey nuevo) {
+    keys_players [Tecla] = Nuevo;
+};
+
+void ControlPlayer :: setDefaultKeys (IdPlayer id) {
+    Iniciar ();
+    si (id == PLAYER_1) {
+    	keys_players [TECLA_IZQUIERDA] = SDLK_a;
+    	keys_players [TECLA_DERECHA] = SDLK_d;
+    	keys_players [TECLA_ARRIBA] = SDLK_w;
+    	keys_players [TECLA_ABAJO] = SDLK_s;
+        keys_players [TECLA_ACCION] = SDLK_e;
+        keys_players [TECLA_START] = SDLK_q;
+// keys_players [TECLA_ACCION_2] = SDLK_1;
+    } Else if (id == PLAYER_2) {
+    	keys_players [TECLA_IZQUIERDA] = SDLK_LEFT;
+    	keys_players [TECLA_DERECHA] = SDLK_RIGHT;
+    	keys_players [TECLA_ARRIBA] = SDLK_UP;
+    	keys_players [TECLA_ABAJO] = SDLK_DOWN;
+        keys_players [TECLA_ACCION] = SDLK_KP_ENTER;
+        keys_players [TECLA_START] = SDLK_p;
+// keys_players [TECLA_ACCION_2] = SDLK_KP1; 
+    } Else if (id == PLAYER_3) {
+    	keys_players [TECLA_IZQUIERDA] = SDLK_f;
+    	keys_players [TECLA_DERECHA] = SDLK_h;
+    	keys_players [TECLA_ARRIBA] = SDLK_t;
+    	keys_players [TECLA_ABAJO] = SDLK_g;
+        keys_players [TECLA_ACCION] = SDLK_r;
+        keys_players [TECLA_START] = SDLK_y;
+// keys_players [TECLA_ACCION_2] = SDLK_5; 
+    
+    } Else if (id == PLAYER_4) {
+    	keys_players [TECLA_IZQUIERDA] = SDLK_j;
+    	keys_players [TECLA_DERECHA] = SDLK_l;
+    	keys_players [TECLA_ARRIBA] = SDLK_i;
+    	keys_players [TECLA_ABAJO] = SDLK_k;
+        keys_players [TECLA_ACCION] = SDLK_u;
+        keys_players [TECLA_START] = SDLK_o;
+// keys_players [TECLA_ACCION_2] = SDLK_8;
+        
+    } Else if (id == PLAYER_5) {
+    	keys_players [TECLA_IZQUIERDA] = SDLK_1;
+    	keys_players [TECLA_DERECHA] = SDLK_2;
+    	keys_players [TECLA_ARRIBA] = SDLK_3;
+    	keys_players [TECLA_ABAJO] = SDLK_4;
+        keys_players [TECLA_ACCION] = SDLK_5;
+        keys_players [TECLA_START] = SDLK_6;
+// keys_players [TECLA_ACCION_2] = SDLK_8;
+
+    }
+}
+
+
+// CSprite 
+
+# include "CSprite.hpp"
+/ *
+Sprite :: Sprite (Sint16 x, Sint16 y):
+        rect (x, y) {
+} * /
+/ *
+Sprite anular :: add (Grupo * nu) {
+    v_grupos.push_back (nu);
+    nuclear> añadir (este);
+} * /
+
+bool Sprite :: isMuerto () {
+     volver self_kill;
+}
+
+Sprite anular :: kill () {
+    self_kill = true;
+}
+bool Sprite :: colision (SDL_Rect y rect_coli) {       
+    rects_colisionan (rect, rect_coli) return;
+}
+
+
+// dat_nivel 
+
+# include "dat_nivel.hpp"
+
+DatNivel :: DatNivel () {
+    Iniciar ();
+}
+
+void DatNivel :: Iniciar () {
+    for (int i = 0; i <_PLAYERS; i ++) {
+       x_init [i] = 0;
+       y_init [i] = 0;
+    }
+    bombas_ini = vidas_ini = = alcance_ini id_tile = artículos = 0;
+}
+
+DatNivel :: DatNivel (Ruta char []) {
+    id_tile = buscar_dato (ruta, "id_tile");
+    si (id_tile <0) id_tile = 0;
+    artículos buscar_dato = (ruta, "artículos");
+    si (artículos <0) = 0 artículos;
+    bombas_ini = buscar_dato (ruta, "bombas");
+    si (bombas_ini <0) bombas_ini = 0;
+    vidas_ini = buscar_dato (ruta, "vidas");
+    si (vidas_ini <0) vidas_ini = 0;
+    alcance_ini = buscar_dato (ruta, "alcance");
+    si (alcance_ini <0) alcance_ini = 0;
+    
+    Char ruta1 [50];
+    for (int i = 0; i <5; i ++) {
+        sprintf (ruta1, "x_init_player_% d", i + 1);
+        x_init [i] = buscar_dato (ruta, ruta1);
+        si (x_init [i] <0) x_init [i] = 0;
+
+        sprintf (ruta1, "y_init_player_% d", i + 1);
+        y_init [i] = buscar_dato (ruta, ruta1);
+        si (y_init [i] <0) y_init [i] = 0;
+    }
+        
+}
+void DatNivel :: GUARDAR (char rutaDestino []) {
+    fnivel ofstream (rutaDestino);
+    fnivel << "bombas:" << bombas_ini << endl;
+    fnivel << "Vidas:" << vidas_ini << endl;
+    fnivel << "alcance:" << alcance_ini << endl;
+    fnivel << "id_tile:" << id_tile << endl;
+    fnivel << "artículos:" << artículos << endl;
+
+    for (int i = 0; i <5; i ++) {
+        fnivel << "x_init_player _" << i + 1 << ":" << x_init [i] << endl;
+        fnivel << "y_init_player _" << i + 1 << ":" << y_init [i] << endl;
+    }
+    fnivel.close ();
+}
+
+
+int DatNivel :: getX (int id_player) {
+    volver x_init [id_player];
+}
+int DatNivel :: getY (int id_player) {
+    volver y_init [id_player];
+}
+anulará DatNivel :: setX (int id_player, int nuevo) {
+    x_init [id_player] = nuevo;
+}
+void DatNivel :: setY (int id_player, int nuevo) {
+    y_init [id_player] = nuevo;
+}
+int DatNivel :: getBombas () {
+    volver bombas_ini;
+}
+int DatNivel :: getVidas () {
+    volver vidas_ini;
+}
+int DatNivel :: getAlcanceBombas () {
+    volver alcance_ini;
+}
+int DatNivel :: getIdTile () {
+    id_tile regresar;
+}
+int DatNivel :: getNumItems () {
+    devolver los artículos;
+}
+
+
+// editor 
+
+# include "editor.hpp"
+
+Editor :: Editor (* GameManager juego):
+    botonBorrar (juego-> getImagen (IMG_BOTON_BORRAR_MAPA), esto, 150221) {
+    #ifdef DEBUG
+        cout << "Constructor de editor:" << esta << endl;
+    #terminara si
+    
+    this-> = juego de juego;
+    
+    rects_botones [0] [EDITOR_BOTON_FLECHA] .x = 57;
+    rects_botones [0] [EDITOR_BOTON_FLECHA] .y = 16;
+    rects_botones [0] [EDITOR_BOTON_FLECHA] .w = 21;
+    rects_botones [0] [EDITOR_BOTON_FLECHA] .h = 19;
+    estados_botones [0] [EDITOR_BOTON_FLECHA] = BOTON_NORMAL;
+
+    rects_botones [0] [EDITOR_BOTON_GUARDAR] .x = 235;
+    rects_botones [0] [EDITOR_BOTON_GUARDAR] .y = 221;
+    rects_botones [0] [EDITOR_BOTON_GUARDAR] .w = 81;
+    rects_botones [0] [EDITOR_BOTON_GUARDAR] .h = 18;
+    estados_botones [0] [EDITOR_BOTON_GUARDAR] = BOTON_NORMAL;
+
+    botonBorrar.bindAccion (y Editor :: borrarMapa);
+// BotonBorrar.bindAccion (borrarMapaNoEstatico);
+    rects_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MAS] .x = 88;
+    rects_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MAS] .y = 5;
+    rects_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MAS] .w = 17;
+    rects_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MAS] .h = 10;
+    estados_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MAS] = BOTON_NORMAL;
+
+    rects_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MENOS] .x = 111;
+    rects_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MENOS] .y = 5;
+    rects_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MENOS] .w = 17;
+    rects_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MENOS] .h = 10;
+    estados_botones [EDITOR_MODIF_BOMBA] [EDITOR_BOTON_MENOS] = BOTON_NORMAL;
+
+
+    rects_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MAS] .x = 151;
+    rects_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MAS] .y = 5;
+    rects_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MAS] .w = 17;
+    rects_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MAS] .h = 10;
+    estados_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MAS] = BOTON_NORMAL;
+
+    rects_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MENOS] .x = 173;
+    rects_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MENOS] .y = 5;
+    rects_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MENOS] .w = 17;
+    rects_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MENOS] .h = 10;
+    estados_botones [EDITOR_MODIF_EXPLOSION] [EDITOR_BOTON_MENOS] = BOTON_NORMAL;
+
+
+    rects_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MAS] .x = 215;
+    rects_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MAS] .y = 5;
+    rects_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MAS] .w = 17;
+    rects_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MAS] .h = 10;
+    estados_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MAS] = BOTON_NORMAL;
+
+    rects_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MENOS] .x = 237;
+    rects_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MENOS] .y = 5;
+    rects_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MENOS] .w = 17;
+    rects_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MENOS] .h = 10;
+    estados_botones [EDITOR_MODIF_VIDAS] [EDITOR_BOTON_MENOS] = BOTON_NORMAL;
+
+
+    rects_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MAS] .x = 269;
+    rects_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MAS] .y = 5;
+    rects_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MAS] .w = 17;
+    rects_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MAS] .h = 10;
+    estados_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MAS] = BOTON_NORMAL;
+
+    rects_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MENOS] .x = 292;
+    rects_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MENOS] .y = 5;
+    rects_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MENOS] .w = 17;
+    rects_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MENOS] .h = 10;
+    estados_botones [EDITOR_MODIF_ITEMS] [EDITOR_BOTON_MENOS] = BOTON_NORMAL;
+
+    // La Ventana párrafo 1
+    rects_botones_elegir_terreno [EDITOR_FLECHA_IZQUIERDA] .x = 17;
+    rects_botones_elegir_terreno [EDITOR_FLECHA_IZQUIERDA] .y = 67;
+    rects_botones_elegir_terreno [EDITOR_FLECHA_IZQUIERDA] .w = 60;
+    rects_botones_elegir_terreno [EDITOR_FLECHA_IZQUIERDA] .h = 27;
+    estados_botones_elegir_terreno [EDITOR_FLECHA_IZQUIERDA] = BOTON_NORMAL;
+
+    rects_botones_elegir_terreno [EDITOR_FLECHA_DERECHA] .x = 239;
+    rects_botones_elegir_terreno [EDITOR_FLECHA_DERECHA] .y = 67;
+    rects_botones_elegir_terreno [EDITOR_FLECHA_DERECHA] .w = 60;
+    rects_botones_elegir_terreno [EDITOR_FLECHA_DERECHA] .h = 27;
+    estados_botones_elegir_terreno [EDITOR_FLECHA_DERECHA] = BOTON_NORMAL;
+
+    rects_botones_elegir_terreno [EDITOR_MAPA_1] .x = 26;
+    rects_botones_elegir_terreno [EDITOR_MAPA_1] .y = 102;
+    rects_botones_elegir_terreno [EDITOR_MAPA_1] .w = 111;
+    rects_botones_elegir_terreno [EDITOR_MAPA_1] .h = 121;
+    estados_botones_elegir_terreno [EDITOR_MAPA_1] = BOTON_NORMAL;
+
+    rects_botones_elegir_terreno [EDITOR_MAPA_2] .x = 177;
+    rects_botones_elegir_terreno [EDITOR_MAPA_2] .y = 102;
+    rects_botones_elegir_terreno [EDITOR_MAPA_2] .w = 111;
+    rects_botones_elegir_terreno [EDITOR_MAPA_2] .h = 121;
+    estados_botones_elegir_terreno [EDITOR_MAPA_2] = BOTON_NORMAL;
+    boton_visible [EDITOR_MAPA_1] = 1;
+
+    SDL_ShowCursor (SDL_ENABLE);
+
+    tile_activo = -1;
+    id_nivel = 0;
+
+
+    maxTerrenoBatalla = buscar_dato (RUTA_CONFIG_BASE, "MaxTerreno");
+    // REALIZAMOS las vistas previas de los Niveles ya CREADOS
+    player_activo = PLAYER_NONE;
+    previews_niveles = 0;
+    crearReferencias ();
+    juego-> playSonido (SND_EDITOR);
+
+    cambiarVentana (EDITOR_ABRIR_NIVEL);
+
+}
+
+anulará Editor :: crearReferencias () {
+    Char ruta [50];
+    if (previews_niveles) {
+         for (int i = 0; i <maxTerrenoBatalla; i ++) {
+            #ifdef DEBUG
+                cout << "Liberando Superficie:" << previews_niveles [i] << endl;
+            #terminara si
+             SDL_FreeSurface (previews_niveles [i]);
+            previews_niveles [i] = NULL;
+         }
+        #ifdef DEBUG
+            cout << "Liberando Superficie:" << previews_niveles [maxTerrenoBatalla] << endl;
+        #terminara si
+         si (botonBorrar.getVisible ()) (SDL_FreeSurface previews_niveles [maxTerrenoBatalla]);
+         previews_niveles [maxTerrenoBatalla] = NULL;
+        #ifdef DEBUG
+            cout << "Avances Liberando:" << previews_niveles << endl;
+        #terminara si
+        Eliminar previews_niveles [];
+        previews_niveles = NULL;
+    }
+    previews_niveles = new SDL_Surface * [maxTerrenoBatalla + 1];
+    #ifdef DEBUG
+        cout << "Avances Creada:" << previews_niveles << endl;
+    #terminara si
+
+    DatNivel * data2;
+    SDL_Surface * img_players [5] = {juego-> getImagen (IMG_PLAYER_1),
+                                  juego-> getImagen (IMG_PLAYER_2),
+                                  juego-> getImagen (IMG_PLAYER_3),
+                                  juego-> getImagen (IMG_PLAYER_4),
+                                  juego-> getImagen (IMG_PLAYER_5)};
+    for (int i = 0; i <maxTerrenoBatalla; i ++) {
+        sprintf (ruta, "datos / Niveles / Batalla /% d.txt", i + 1);
+        datos2 = new DatNivel (RUTA);
+        sprintf (ruta, "datos / Niveles / Batalla /% d.map", i + 1);
+        previews_niveles [i] = Mapa :: getPreviewTerreno (ruta, data2, partidas> getImagen (IMG_TILES), img_players, 8,40);
+    #ifdef DEBUG
+        cout << "Creada la superficie:" << previews_niveles [i] << endl;
+    #terminara si
+        Eliminar data2;
+    }
+    // REALIZAMOS la vista previa del "nivel nuevo"
+
+    sprintf (ruta, "datos / Niveles / Batalla /% d.map", NIVEL_BASE);
+    previews_niveles[maxTerrenoBatalla]=Mapa::getPreviewTerreno(ruta,NULL,game->getImagen(IMG_TILES),NULL,8,40);
+    #ifdef DEBUG
+        cout << "Creada Superficie:" << previews_niveles [maxTerrenoBatalla] << endl;
+    #terminara si
+
+}
+anulará Editor :: cambiarVentana (int Nueva) {
+    = ventana nueva;
+
+    si (ventana == EDITOR_ABRIR_NIVEL) cambiarPagina (1);
+}
+
+anulará Editor :: cambiarPagina (unsigned int num_pagina) {
+        Pagina = num_pagina;
+
+        si (== pagina 1) {
+            boton_visible [EDITOR_FLECHA_IZQUIERDA] = false;
+        }más{
+            boton_visible [EDITOR_FLECHA_IZQUIERDA] = true;
+            }
+
+        if ((maxTerrenoBatalla + 1) -pagina * 2 <= 0) {
+            boton_visible [EDITOR_FLECHA_DERECHA] = false;
+        }más{
+            boton_visible [EDITOR_FLECHA_DERECHA] = true;
+            }
+
+        if ((maxTerrenoBatalla + 1) * 2 -pagina == - 1) {
+            boton_visible [EDITOR_MAPA_2] = false;
+        }más{
+            boton_visible [EDITOR_MAPA_2] = true;
+            }
+
+}
+
+anulará Editor :: iniciarEdicion (int id) {
+    tile_activo = -1;
+    player_activo = PLAYER_NONE;
+    mantiene_presionado = false;
+    id_nivel = id;
+    Char ruta [40];
+    
+    si (id! = NIVEL_BASE) {
+        sprintf (ruta, "datos / Niveles / Batalla /% d.map", ID + 1);
+        Mapa :: cargarMapaDeArchivoBin (ruta, mapa);
+        sprintf (ruta, "datos / Niveles / Batalla /% d.txt", ID + 1);
+        
+        si (datos) eliminar datos;
+        datos = new DatNivel (RUTA);
+        botonBorrar.setVisible (true);
+        leerInfTile ();
+        
+    }más{
+        botonBorrar.setVisible (false);
+        sprintf (ruta, "datos / Niveles / Batalla /% d.map", NIVEL_BASE);
+        Mapa :: cargarMapaDeArchivoBin (ruta, mapa);
+        si (datos) eliminar datos;
+        datos = new DatNivel ();
+        sprintf (ruta, "datos / Niveles / Batalla /% d.map", NIVEL_BASE + 1);  
+        Datos-> setBombas (1);
+        Datos-> setAlcanceBombas (1);
+         
+        data-> setX (PLAYER_1, X_INIT_PLAYER_1);
+        data-> setY (PLAYER_1, Y_INIT_PLAYER_1);
+
+        data-> setX (PLAYER_2, X_INIT_PLAYER_2);
+        data-> setY (PLAYER_2, Y_INIT_PLAYER_2);
+
+        data-> setX (PLAYER_3, X_INIT_PLAYER_3);
+        data-> setY (PLAYER_3, Y_INIT_PLAYER_3);
+
+        data-> setX (PLAYER_4, X_INIT_PLAYER_4);
+        data-> setY (PLAYER_4, Y_INIT_PLAYER_4);
+
+        data-> setX (PLAYER_5, X_INIT_PLAYER_5);
+        data-> setY (PLAYER_5, Y_INIT_PLAYER_5);
+        EjeX = 25;
+        EjeY = 58;
+        yTablero = 8;
+        idFondo = IMG_FONDO_METAL;
+        
+     }
+
+    cambiarVentana (EDICION_NIVEL);
+}
+anulará Editor :: leerInfTile () {
+    char key [50], el valor [50];
+    sprintf (clave "datos / imagenes / Objetos / tile_% d.txt", data-> getIdTile () + 1);
+    ifstream ftile (clave);
+    while (! ftile.eof ()) {
+        ftile >> clave;
+        if (! strcmp (clave "IMG_FONDO")) {
+            ftile >> guerra;
+            if (! strcmp (valor, "FONDO_1"))
+                idFondo = IMG_FONDO_PARTI;
+            else if (! strcmp (valor, "FONDO_2"))
+                idFondo = IMG_FONDO_EDIFICIOS;
+            else if (! strcmp (valor, "FONDO_3"))
+                idFondo = IMG_FONDO_METAL;
+        } Else if (! Strcmp (clave, "EJES")) {
+            ftile >> >> EjeX EjeY;
+        } Else if (! Strcmp (clave "Y_TABLERO")) {
+            ftile >> yTablero;
+        }más{
+            ftile >> guerra;
+        }
+    }
+    ftile.close ();
+    
+}
+anulará Editor :: guardarMapa () {
+    Char ruta [50];
+    int = id_file id_nivel + 1;
+    si (== id_nivel NIVEL_BASE) {
+        id_file = ++ maxTerrenoBatalla;
+    }
+        
+    sprintf (ruta, "datos / Niveles / Batalla /% d.map", id_file);
+    FS2 ofstream (RUTA, ios :: out | ios :: binarios);
+    si (FS2) {cout << "Error guardando mapa en archivo:" << Ruta << endl; return;}
+    
+    fs2.write (reinterpret_cast <char *> (MAPA), Mapa :: MAXMAP);
+    fs2.close ();
+
+    sprintf (ruta, "datos / Niveles / Batalla /% d.txt", id_file);
+    data-> GUARDAR (RUTA);
+    
+    int puntaje = buscar_dato (RUTA_CONFIG_BASE, "Puntaje") ;;
+    ofstream archivo (RUTA_CONFIG_BASE);
+    << presentar "MaxTerreno:" << maxTerrenoBatalla << endl;
+    << presentar "Puntaje:" << puntaje << endl;
+    file.close ();
+    crearReferencias ();
+}
+
+anulará Editor :: borrarMapa () {
+    Char ruta [50], nuevaRuta [50];
+    int = id_file id_nivel + 1;
+    
+    sprintf (ruta, "datos / Niveles / Batalla /% d.map", id_file);
+    // Cout << "Borrar:" << Ruta << endl;
+    si (quitar (RUTA)) {
+        cout << "borrando de error:" << Ruta << endl;
+    }
+    
+    sprintf (ruta, "datos / Niveles / Batalla /% d.txt", id_file);
+    // Cout << "Borrar:" << Ruta << endl;
+    si (quitar (RUTA)) {
+        cout << "borrando de error:" << Ruta << endl;
+        regreso;
+    }
+    / * Función auxiliar sin estatica párr Poder USAR EL BOTÓN * /
+    maxTerrenoBatalla--;
+    int puntaje = buscar_dato (RUTA_CONFIG_BASE, "Puntaje") ;;
+    ofstream archivo (RUTA_CONFIG_BASE);
+    << presentar "MaxTerreno:" << maxTerrenoBatalla << endl;
+    << presentar "Puntaje:" << puntaje << endl;
+    file.close ();
+    
+    for (int i = 0; i <maxTerrenoBatalla + 1-id_file; i ++) {
+        sprintf (ruta, "datos / Niveles / Batalla /% d.map", id_file + i + 1);
+        sprintf (nuevaRuta, "datos / Niveles / Batalla /% d.map", id_file + i);
+        // Cout << "Renombrando:" << << ruta "a:" << nuevaRuta << endl;
+	    cambiar el nombre (ruta, nuevaRuta);
+
+        sprintf (ruta, "datos / Niveles / Batalla /% d.txt", id_file + i + 1);
+        sprintf (nuevaRuta, "datos / Niveles / Batalla /% d.txt", id_file + i);
+        // Cout << "Renombrando:" << << ruta "a:" << nuevaRuta << endl;
+	    cambiar el nombre (ruta, nuevaRuta);
+
+    }
+    
+    crearReferencias ();
+    cambiarVentana (EDITOR_ABRIR_NIVEL);
+
+}
+
+
+
+bool Editor :: EditPointMap (* SDL_Event evento) {
+    
+    if (! punto_en_rect_coordenadas (evento-> motion.x, evento-> motion.y, EjeX, EjeY, 272176) && tile_activo = - 1) {
+        int x = (evento-> motion.x- EjeX) / 16, y = (evento-> motion.y - EjeY) / 16; // Calculamos la posicion del cursor RESPECTO a los azulejos
+        si (mapa [y * Mapa :: COLUMNAS + x]! = tile_activo) {// Si No Es El Mismo
+            / * Reproducimos ONU sonido de Acuerdo al bloque anterior Que ESTABA ahy * /
+            if(mapa[y*Mapa::COLUMNAS+x]!=Mapa::BLOQUE_PISO&&mapa[y*Mapa::COLUMNAS+x]!=Mapa::BLOQUE_PISO_SOMBRA){//si ya Ocupado ESTABA
+                juego-> play (SFX_TONO_SECO);
+            }
+            juego-> play (SFX_TONO_ACUATICO);
+            if ((tile_activo == :: Mapa BLOQUE_PISO && evento-> motion.y-16> = EjeY && mapa [((evento-> motion.y -16- EjeY) / 16) * Mapa :: COLUMNAS + x]! = Mapa :: BLOQUE_PISO && mapa [((evento-> motion.y -16- EjeY)/16)*Mapa::COLUMNAS+x]!=Mapa::BLOQUE_PISO_SOMBRA)||(y==0&&tile_activo==Mapa::BLOQUE_PISO)||(tile_activo==Mapa::BLOQUE_PISO&&mapa[y*Mapa::COLUMNAS+x]==Mapa::BLOQUE_PISO_SOMBRA))
+                mapa [y * Mapa :: COLUMNAS + x] = Mapa :: BLOQUE_PISO_SOMBRA;
+            más
+                mapa [y * Mapa :: COLUMNAS + x] = tile_activo; // MODIFICAMOS EL MAPA
+            
+            si (tile_activo! = Mapa :: BLOQUE_PISO) {
+                si (evento-> motion.y + 16! = EjeY + Mapa :: FILAS * 16 && mapa [((evento-> motion.y + 16- EjeY) / 16) * Mapa :: COLUMNAS + x] == Mapa :: BLOQUE_PISO) {
+                    mapa [((evento-> motion.y + 16- EjeY) / 16) * Mapa :: COLUMNAS + x] = Mapa :: BLOQUE_PISO_SOMBRA;
+                }
+            }más{
+                si (evento-> motion.y + 16 <= EjeY + Mapa :: FILAS * 16 && mapa [((evento-> motion.y + 16- EjeY) / 16) * Mapa :: COLUMNAS + x] == Mapa :: BLOQUE_PISO_SOMBRA) {
+                    mapa [((evento-> motion.y + 16- EjeY) / 16) * Mapa :: COLUMNAS + x] = Mapa :: BLOQUE_PISO;
+                }
+            }
+            return true;
+        }más
+            return true; // REGRESAMOS "TRUE" Teja PORQUE Al menos PASO LA PRIMERA PRUEBA SOLO QUE EN ESE PUNTO YA ESTABA EL MISMO
+    }
+    falso retorno;
+}
+anulará Editor :: procesarEvento (* SDL_Event evento) {
+        static int i, j;
+
+        interruptor (ventana) {
+
+            EDICION_NIVEL caso:
+                botonBorrar.procesarEvento (evento);
+                si (evento-> type == SDL_KEYDOWN && evento-> key.keysym.sym == SDLK_ESCAPE) {
+                    cambiarVentana (EDITOR_ABRIR_NIVEL);
+                } Else if (evento-> type == SDL_MOUSEMOTION) {
+                    for (i = 0; i <5; i ++) {
+                        for (j = 0; j <2; j ++) {
+                            si (i == 0 && j == EDITOR_BOTON_GUARDAR) continúan;
+                        	si (punto_en_rect (evento-> motion.x, evento-> motion.y-yTablero, y rects_botones [i] [j])) {
+                                si (estados_botones [i] [j]! = BOTON_PRESIONADO)
+                        				estados_botones [i] [j] = BOTON_RESALTADO;
+                            }
+                			más
+                				estados_botones [i] [j] = BOTON_NORMAL;
+                        }
+                    }
+                    
+                	si (punto_en_rect (evento-> motion.x, evento-> motion.y, & rects_botones [0] [EDITOR_BOTON_GUARDAR])) {
+                        if (estados_botones [0] [EDITOR_BOTON_GUARDAR]! =) BOTON_PRESIONADO
+                				estados_botones [0] [EDITOR_BOTON_GUARDAR] = BOTON_RESALTADO;
+                    }
+        			más
+        				estados_botones [0] [EDITOR_BOTON_GUARDAR] = BOTON_NORMAL;
+                    
+                    si (player_activo> = 0) {
+
+                        if(evento->motion.y+10<EjeY||evento->motion.y+10+10>EjeY+Mapa::FILAS*16||evento->motion.x+3<EjeX||evento->motion.x+3 + 10> EjeX + Mapa :: COLUMNAS * 16) {
+                            int x = evento-> motion.x, y = evento-> motion.y;
+
+                            si (evento-> motion.y + 10 <EjeY) {
+                                y = EjeY-10;
+                            } Else if (evento-> motion.y + 21> EjeY + Mapa :: FILAS * 16) {
+                                y = EjeY + Mapa :: FILAS * 16-21;
+                            }
+
+                            si (evento-> motion.x + 3 <EjeX) {
+                                x = EjeX-3;
+                            } Else if (evento-> motion.x + 13> EjeX + Mapa :: COLUMNAS * 16) {
+                                x = EjeX + Mapa :: COLUMNAS * 16-13;
+                            }
+
+                            SDL_WarpMouse (x, y);
+                        }
+
+
+                    }
+
+                    si (mantiene_presionado && tile_activo = - 1)
+                        EditPointMap (evento);
+                            
+                } Else if (evento-> type == SDL_MOUSEBUTTONDOWN) {
+                    si (evento-> button.button == SDL_BUTTON_LEFT) {
+                            for (i = 0; i <5; i ++)
+                                for (j = 0; j <2; j ++) {
+                                    si (i == 0 && j == EDITOR_BOTON_GUARDAR) continúan;
+                                	si (punto_en_rect (evento-> motion.x, evento-> motion.y-yTablero, y rects_botones [i] [j])) {
+                            			estados_botones [i] [j] = BOTON_PRESIONADO;
+                                        juego-> play (SFX_ESTRANYO);
+                                    }
+                                }
+                                
+                        	si (punto_en_rect (evento-> motion.x, evento-> motion.y, & rects_botones [0] [EDITOR_BOTON_GUARDAR])) {
+                    			estados_botones [0] [EDITOR_BOTON_GUARDAR] = BOTON_PRESIONADO;
+                                juego-> play (SFX_ESTRANYO);
+                            }
+
+
+
+                            si (punto_en_rect_coordenadas (evento-> motion.x, evento-> motion.y, 6,20 + yTablero, 47,16)) {
+                                tile_activo = (evento-> motion.x-6) / 16;
+                                si (tile_activo == 2) tile_activo = 3;
+                                player_activo = PLAYER_NONE;
+                                juego-> play (SFX_CAMPANADA);
+                            }
+                            más
+                                si (EditPointMap (evento))
+                                    mantiene_presionado = 1;
+
+
+                        } Else if (evento-> button.button == SDL_BUTTON_RIGHT) {
+                            for (i = 0; i <_PLAYERS; i ++)
+                                if(punto_en_rect_coordenadas(evento->motion.x,evento->motion.y,data->getX((IdPlayer)i),data->getY((IdPlayer)i),15,15)){
+                                    player_activo = (IdPlayer) i;
+                                    tile_activo = -1;
+                                    regreso;
+                                }
+
+                            si (player_activo! = PLAYER_NONE) {
+                                data-> setX (player_activo, evento-> motion.x);
+                                data-> setY (player_activo, evento-> motion.y);
+                                player_activo = PLAYER_NONE;
+                            }
+                        }
+
+
+            	}
+            	else if (evento-> type == SDL_MOUSEBUTTONUP && evento-> button.button == SDL_BUTTON_LEFT) {
+                    mantiene_presionado = false;
+                        for (i = 0; i <5; i ++)
+                            for (j = 0; j <2; j ++) {
+                            	si (punto_en_rect (evento-> motion.x, evento-> motion.y-yTablero, y rects_botones [i] [j])) {
+                                        interruptor (i) {
+                                            caso 0:
+                                                si (EDITOR_BOTON_FLECHA == j) {
+                                                    si (data-> getIdTile () <5) {
+                                                        data-> setIdTile (data-> getIdTile () + 1);
+                                                        si (data-> getIdTile () == 4) {
+                                                            data-> setIdTile (0);
+                                                        }
+                                                        leerInfTile ();
+                                                    }
+                                                }
+                                                romper;
+                                            EDITOR_MODIF_BOMBA caso:
+                                                si (j == EDITOR_BOTON_MAS) {
+                                                    data-> setBombas (data-> getBombas () + 1);
+                                                    si (data-> getBombas ()> MAX_BOMBAS)
+                                                        Datos-> setBombas (MAX_BOMBAS);
+                                                }más{
+                                                    data-> setBombas (data-> getBombas) - (1);
+                                                    si (data-> getBombas () <0)
+                                                        Datos-> setBombas (0);
+                                                }
+
+                                                romper;
+                                            EDITOR_MODIF_EXPLOSION caso:
+                                                si (j == EDITOR_BOTON_MAS) {
+                                                    data-> setAlcanceBombas (data-> getAlcanceBombas () + 1);
+                                                    if (data-> getAlcanceBombas ()> 12)
+                                                        Datos-> setAlcanceBombas (12);
+                                                }más{
+                                                    data-> setAlcanceBombas (data-> getAlcanceBombas) - (1);
+                                                    si (data-> getAlcanceBombas () <0)
+                                                        Datos-> setAlcanceBombas (0);
+                                                }   
+                                                romper;
+                                            EDITOR_MODIF_VIDAS de caso:
+                                                si (j == EDITOR_BOTON_MAS) {
+                                                    Datos-> setVidas (data-> getVidas () + 1);
+                                                    if (data-> getVidas ()> 5)
+                                                        Datos-> setVidas (5);
+                                                }más{
+                                                    Datos-> setVidas (data-> getVidas) - (1);
+                                                    si (getVidas de datos> () <0)
+                                                        Datos-> setVidas (0);
+                                                }
+                                                romper;
+                                            EDITOR_MODIF_ITEMS caso:
+                                                si (j == EDITOR_BOTON_MAS) {
+                                                    Datos-> setNumItems (data-> getNumItems () + 1);
+                                                    if (data-> getNumItems ()> 30)
+                                                        Datos-> setNumItems (30);
+                                                }más{
+                                                    Datos-> setNumItems (data-> getNumItems) - (1);
+                                                    si (getNumItems de datos> () <0)
+                                                        Datos-> setNumItems (0);
+                                                }
+                                                romper;
+                                        }
+                            			estados_botones [i] [j] = BOTON_NORMAL;
+                                } // Fin SI punto rect
+                        } // Seg para
+                    si (punto_en_rect (evento-> motion.x, evento-> motion.y, & rects_botones [0] [EDITOR_BOTON_GUARDAR])) {
+                        guardarMapa ();
+                        cambiarVentana (EDITOR_ABRIR_NIVEL);
+                    }
+                } // Aleta más si
+                
+            romper;
+
+        EDITOR_ABRIR_NIVEL caso:
+                si (evento-> Tipo == SDL_KEYDOWN) {
+                    interruptor (evento-> key.keysym.sym) {
+                            SDLK_ESCAPE caso:
+                                juego-> cambiarInterfaz (nuevo menú (juego));
+                                romper;
+                            SDLK_1 caso:
+                                 si (boton_visible [EDITOR_MAPA_1]) {
+                                    if (! maxTerrenoBatalla + 1) -pagina (* 2 = - 1)
+                                        iniciarEdicion ((pagina-1) * 2);
+                                    más
+                                        iniciarEdicion (NIVEL_BASE);
+                                 }
+                                romper;
+                            SDLK_2 caso:
+                                 si (boton_visible [EDITOR_MAPA_2]) {
+                                    if ((maxTerrenoBatalla + 1) * 2 -pagina> 0)
+                                        iniciarEdicion ((pagina-1) * 2 + 1);
+                                    más
+                                        iniciarEdicion (NIVEL_BASE);
+                                    }
+                                romper;
+                            SDLK_LEFT caso:
+                                 si (boton_visible [EDITOR_FLECHA_IZQUIERDA])
+                                       cambiarPagina (Pagina - 1);
+                                romper;
+                            SDLK_RIGHT caso:
+                                 si (boton_visible [EDITOR_FLECHA_DERECHA])
+                                       cambiarPagina (Pagina + 1);
+                                romper;
+                            defecto:
+                                romper;
+                    }                                       
+
+                } Else if (evento-> type == SDL_MOUSEMOTION) {
+                            si (boton_visible [EDITOR_FLECHA_IZQUIERDA])
+                            {
+                                if(punto_en_rect(evento->motion.x,evento->motion.y,&rects_botones_elegir_terreno[EDITOR_FLECHA_IZQUIERDA]))
+                                    estados_botones_elegir_terreno [EDITOR_FLECHA_IZQUIERDA] = BOTON_RESALTADO;
+                                más
+                                    estados_botones_elegir_terreno [EDITOR_FLECHA_IZQUIERDA] = BOTON_NORMAL;
+                            }
+
+                            si (boton_visible [EDITOR_FLECHA_DERECHA])
+                            {
+                                if(punto_en_rect(evento->motion.x,evento->motion.y,&rects_botones_elegir_terreno[EDITOR_FLECHA_DERECHA]))
+                                    estados_botones_elegir_terreno [EDITOR_FLECHA_DERECHA] = BOTON_RESALTADO;
+                                más
+                                    estados_botones_elegir_terreno [EDITOR_FLECHA_DERECHA] = BOTON_NORMAL;
+                            }
+
+
+
+                } Else if (evento-> type == SDL_MOUSEBUTTONDOWN && evento-> button.button == SDL_BUTTON_LEFT) {
+                        for (i = 0; i <4; i ++)
+                            	si (boton_visible [i] && punto_en_rect (evento-> motion.x, evento-> motion.y, y rects_botones_elegir_terreno [i])) {
+                            			estados_botones_elegir_terreno [i] = BOTON_PRESIONADO;
+                                        juego-> play (SFX_TONO_SECO);
+                                }
+            	}
+            	else if (evento-> type == SDL_MOUSEBUTTONUP && evento-> button.button == SDL_BUTTON_LEFT) {
+                        for (i = 0; i <4; i ++) {
+                                si (boton_visible [i] && punto_en_rect (evento-> motion.x, evento-> motion.y, y rects_botones_elegir_terreno [i])) {
+                                    interruptor (i) {
+
+                                        EDITOR_FLECHA_IZQUIERDA caso:
+                                            cambiarPagina (Pagina - 1);
+                                            romper;
+                                        EDITOR_FLECHA_DERECHA caso:
+                                            cambiarPagina (Pagina + 1);
+                                            romper;
+                                        EDITOR_MAPA_1 caso:
+                                                if (! maxTerrenoBatalla + 1) -pagina (* 2 = - 1)
+                                                    iniciarEdicion ((pagina-1) * 2);
+                                                más
+                                                    iniciarEdicion (NIVEL_BASE);
+                                            romper;
+                                        EDITOR_MAPA_2 caso:
+                                                if ((maxTerrenoBatalla + 1) * 2 -pagina> 0)
+                                                    iniciarEdicion ((pagina-1) * 2 + 1);
+                                                más
+                                                    iniciarEdicion (NIVEL_BASE);
+
+                                            romper;
+
+                                    }
+                                    estados_botones_elegir_terreno [i] = BOTON_NORMAL;
+                                }
+                            }
+                }
+            romper;
+    }
+
+}
+
+anulará Editor :: empate (SDL_Surface pantalla *) {
+    static int i, j;
+    static char social [30];
+
+    interruptor (ventana) {
+        EDICION_NIVEL caso:
+                dibujar_objeto (juego-> getImagen ((CodeImagen) (idFondo)), 0,0, pantalla);
+                Mapa :: empate (pantalla, partidas> getImagen (IMG_TILES), mapa, EjeX, EjeY, data-> getIdTile ());
+
+                dibujar_objeto (juego-> getImagen (IMG_TABLERO), 0, yTablero, pantalla);
+
+                for (i = 1; i <5; i ++) {
+                    for (j = 0; j <2; j ++) {
+                        imprimir_desde_grilla (juego-> getImagen ((CodeImagen) (IMG_BOTON_MAS + j)), estados_botones [i] [j], pantalla, rects_botones [i] [j] .x, rects_botones [i] [j] .y + yTablero, 3 , 1,0);
+                        }
+                    }
+
+            
+                dibujar_objeto (juego-> getImagen (IMG_LLAMA), 143,20 + yTablero, pantalla); // explosión
+                dibujar_objeto (juego-> getImagen (IMG_BOMBA_PEQUE), 91,20 + yTablero, pantalla); // Bomba
+                dibujar_objeto (juego-> getImagen (IMG_CORAZON), 217,20 + yTablero, pantalla); // Vidas
+                dibujar_objeto (juego-> getImagen (IMG_PREGUNTA), 270,21 + yTablero, pantalla); // elemento
+
+                dibujar_objeto (juego-> getImagen (IMG_TXT_TILES), 6,3 + yTablero, pantalla);
+
+                // Dibujamos la Cantidad de bombas Iniciales
+                sprintf (valores "x% d", data-> getBombas ());
+                imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_2), 107,21 + yTablero, acción, STR_NORMAL);
+
+                // Dibujamos el Alcance de las bombas Iniciales
+                sprintf (valores "x% d", data-> getAlcanceBombas ());
+                imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_2), 177,21 + yTablero, acción, STR_NORMAL);
+
+                // Dibujamos Las vidas Iniciales
+                sprintf (valores "x% d", data-> getVidas ());
+                imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_2), 237,21 + yTablero, acción, STR_NORMAL);
+
+                // Dibujamos la Cantidad de artículos Iniciales
+                sprintf (valores "x% d", data-> getNumItems ());
+                imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_2), 288,21 + yTablero, acción, STR_NORMAL);
+                
+                for (int j = 0; j <3; j ++)
+                    imprimir_desde_grilla(game->getImagen(IMG_TILES),data->getIdTile()*4+((j!=2)?j:Mapa::BLOQUE_PISO),screen,j*16+6,20+yTablero,4,4,0);
+
+                imprimir_desde_grilla(game->getImagen(IMG_BOTON_FLECHA_PEQUE_DERECHA),estados_botones[0][0],screen,rects_botones[0][0].x,rects_botones[0][0].y+yTablero,3,1,0);
+
+                static int x, y;
+                SDL_GetMouseState (x, y & Y);
+
+                for (i = 0; i <_PLAYERS; i ++) {
+                    si (i! = player_activo) {
+                        imprimir_desde_grilla (juego-> getImagen ((CodeImagen) (IMG_PLAYER_1 + i)), 6, pantalla, data-> getX ((IdPlayer) i), data-> getY ((IdPlayer) i), 1,12,1);
+                    }más{
+                        imprimir_desde_grilla (Juego-> getImagen ((CodeImagen) (IMG_PLAYER_1 + i)), 6, pantalla, x, y, 1,12,1);
+                    }
+                }
+
+                si (tile_activo> = 0 && punto_en_rect_coordenadas (x, y, EjeX, EjeY, 272,176)) {
+                    rect SDL_Rect estática;
+                    rect.x = (x-EjeX) / 16 * 16 + EjeX;
+                    rect.y = (y-EjeY) / 16 * 16 + EjeY;
+                    imprimir_desde_grilla(game->getImagen(IMG_TILES),data->getIdTile()*4+tile_activo,screen,rect.x,rect.y,4,4,1);
+
+                }
+
+                imprimir_desde_grilla(game->getImagen(IMG_BOTON_GUARDAR),estados_botones[0][1],screen,rects_botones[0][1].x,rects_botones[0][1].y,3,1,0);
+                botonBorrar.draw (pantalla);
+            romper;
+        EDITOR_ABRIR_NIVEL caso:
+
+                dibujar_objeto (juego-> getImagen (IMG_FONDO_EDITOR_SELECT_FILE), 0, 0, pantalla);
+
+
+                si (boton_visible [EDITOR_FLECHA_IZQUIERDA])
+                    imprimir_desde_grilla(game->getImagen(IMG_BOTON_FLECHA_GRANDE_IZQUIERDA),estados_botones_elegir_terreno[EDITOR_FLECHA_IZQUIERDA],screen,rects_botones_elegir_terreno[EDITOR_FLECHA_IZQUIERDA].x,rects_botones_elegir_terreno[EDITOR_FLECHA_IZQUIERDA].y,3,1,0);
+
+                si (boton_visible [EDITOR_FLECHA_DERECHA])
+                    imprimir_desde_grilla(game->getImagen(IMG_BOTON_FLECHA_GRANDE_DERECHA),estados_botones_elegir_terreno[EDITOR_FLECHA_DERECHA],screen,rects_botones_elegir_terreno[EDITOR_FLECHA_DERECHA].x,rects_botones_elegir_terreno[EDITOR_FLECHA_DERECHA].y,3,1,0);
+
+
+                imprimir_desde_grilla(game->getImagen(IMG_BOTON_ESTRANIO),(estados_botones_elegir_terreno[EDITOR_MAPA_1]==BOTON_PRESIONADO)?1:0,screen,rects_botones_elegir_terreno[EDITOR_MAPA_1].x,rects_botones_elegir_terreno[EDITOR_MAPA_1].y,2,1,0);
+                dibujar_objeto(previews_niveles[(pagina-1)*2],rects_botones_elegir_terreno[EDITOR_MAPA_1].x+7,rects_botones_elegir_terreno[EDITOR_MAPA_1].y+5,screen);
+
+
+                if ((maxTerrenoBatalla + 1) * 2 -pagina == - 1) {
+                    imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_5),
+                                    rects_botones_elegir_terreno [EDITOR_MAPA_1] .x + 2,
+                                    rects_botones_elegir_terreno [EDITOR_MAPA_1] .y + 50,
+                                    "Nuevo", STR_NORMAL);
+
+                }
+                si (boton_visible [EDITOR_MAPA_2]) {
+                        imprimir_desde_grilla(game->getImagen(IMG_BOTON_ESTRANIO),(estados_botones_elegir_terreno[EDITOR_MAPA_2]==BOTON_PRESIONADO)?1:0,screen,rects_botones_elegir_terreno[EDITOR_MAPA_2].x,rects_botones_elegir_terreno[EDITOR_MAPA_2].y,2,1,0);
+                        dibujar_objeto (previews_niveles [(pagina-1) * 2 + 1],rects_botones_elegir_terreno[EDITOR_MAPA_2].x+7,rects_botones_elegir_terreno[EDITOR_MAPA_2].y+5,screen);
+    
+                        if ((maxTerrenoBatalla + 1) -pagina * 2 <= 0)
+                            imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_5),
+                                            rects_botones_elegir_terreno [EDITOR_MAPA_2] .x + 2,
+                                            rects_botones_elegir_terreno [EDITOR_MAPA_2] .y + 50,
+                                            "Nuevo", STR_NORMAL);
+                }
+            romper;
+    }
+}
+
+Editor :: ~ Editor () {
+    #ifdef DEBUG
+        cout << "Llamando al destructor de editor:" << esta << endl;
+    #terminara si
+     int i;
+     for (i = 0; i <= maxTerrenoBatalla; i ++) {
+        #ifdef DEBUG
+         cout << "Liberando la superficie:" << previews_niveles [i] << endl;
+        #terminara si
+         SDL_FreeSurface (previews_niveles [i]);
+     }
+    #ifdef DEBUG
+     cout << "Liberando Vista previa:" << previews_niveles << endl;
+    #terminara si
+    Eliminar previews_niveles [];
+    borrar datos;
+}
+
+
+// explosión 
+
+# include "explosion.hpp"
+
+
+:: Explosión explosión (* Juego juego, int x, int y, int alcance_llamas, int Lanzador, int id):
+    Animacion (NULL, 0,0, "0,1,2,3,4,4,3,2,1,1,0", x, y, id) {
+    this-> = juego juego;
+    
+    this-> Lanzador Lanzador =;
+    this-> alcance_llamas = alcance_llamas;
+    detectarAlcance (DERECHA, 16,0);
+    detectarAlcance (IZQUIERDA, -16,0);
+    detectarAlcance (ABAJO, 0,16);
+    detectarAlcance (ARRIBA, 0, -16);
+
+    // reproducimos Sonido de la ONU
+    juego-> play (SFX_EXPLOSION);
+    this-> type = EXPLOSIÓN;
+}
+
+Explosión vacío :: detectarAlcance (int dir, int aum_x, int aum_y) {
+
+    int es_bloque_rompible, colision_con_bomba, colision_con_item;
+    int globo_anyadido;
+    SDL_Rect coli = {0,0,16,16};
+    for (int i = 1; i <alcance_llamas + 1; i ++) {
+        coli.x = x + aum_x * i;
+        coli.y = y + aum_y * i;
+        Alcances [dir] = i;
+        si (coli.x <juego-> getEjeXVisual () || \
+           coli.x + coli.w> juego-> getEjeXVisual () + juego-> getAnchoMapa () || \
+           coli.y <juego-> getEjeYVisual () || \
+           coli.y + coli.h> juego-> getEjeYVisual () + juego-> getAltoMapa ()) {
+            --alcances [dir];
+            regreso;
+        }
+        es_bloque_rompible = juego-> isBloqueRompible (coli.x, coli.y);
+        colision_con_bomba = juego-> colision (BOMBA, coli);
+        colision_con_item = juego-> colision (PUNTO, coli);
+
+        si (colision_con_bomba = - 1) {
+            juego-> setRepeticionBomba (colision_con_bomba, 0); // se Acelera el 'explotarlo'
+            --alcances [dir];
+            regreso;
+        }
+
+        si (juego-> isBloqueDuro (coli.x, coli.y) || || es_bloque_rompible colision_con_item = - 1) {
+
+
+            si (es_bloque_rompible && juego-> colision (BLOQUE, coli) == - 1) {
+                juego-> addSprite (BLOQUE, coli.x, coli.y);
+            } Else if (colision_con_item = - 1) {
+                si (juego-> getTipoItem (colision_con_item)! = artículo :: ITEM_PUERTA) {
+                    juego-> addSprite (nueva Animacion (juego-> getImagen (IMG_ITEM_FIRE), 1,7, "0,0,0,1,1,2,2,2,3,3,4,4,5,5,6 , 6 ", coli.x, coli.y));
+                    juego-> killSprite (PUNTO, colision_con_item);
+                }más{
+                     int x, y;
+                     juego-> getPosicion (PUNTO, colision_con_item, x, y);
+// Globo_anyadido = juego-> addSprite (Globo, nuevo Globox, y);
+// Si (globo_anyadido = - 1)
+// Juego-> setProteccion (Globo, globo_anyadido, true);
+                }
+            }
+
+            --alcances [dir];
+            regreso;
+        }
+
+    }
+
+}
+Explosión vacío :: dibujarFlama (int dir, int aum_x, int aum_y, int cuadro_normal, int cuadro_final, SDL_Surface * pantalla)
+{
+    int i;
+	int x, y;
+
+    for (i = 1; i <alcances [dir]; i ++)
+    {
+        x = this-> x + aum_x * i;
+        y = this-> y + aum_y * i;
+        si (x + 16> 0 && x <W_SCREEN && y <H_SCREEN && y + 16> 0)
+        imprimir_desde_grilla (juego-> getImagen (IMG_EXPLOSION), cuadro_normal + COLUMNAS_EXPLO * getCuadro (), pantalla, x, y, FILAS_EXPLO, COLUMNAS_EXPLO, 0);
+    }
+    x = this-> x + aum_x * i;
+    y = this-> y + aum_y * i;
+    si (x + 10> 0 && x <W_SCREEN && y <H_SCREEN && y + 16> 0) {
+        si (Alcances [dir] == alcance_llamas)
+        	imprimir_desde_grilla (juego-> getImagen (IMG_EXPLOSION), cuadro_final + COLUMNAS_EXPLO * getCuadro (), pantalla, x, y, FILAS_EXPLO, COLUMNAS_EXPLO, 0);
+        else if (Alcances [dir])
+        	imprimir_desde_grilla (juego-> getImagen (IMG_EXPLOSION), cuadro_normal + COLUMNAS_EXPLO * getCuadro (), pantalla, x, y, FILAS_EXPLO, COLUMNAS_EXPLO, 0);
+    }
+}
+
+
+Explosión vacío :: empate (SDL_Surface pantalla *) {
+
+    // Dibujamos EL CENTRO
+    si (x + 10> 0 && x <W_SCREEN && y <H_SCREEN && y + 16> 0)
+	     imprimir_desde_grilla (juego-> getImagen (IMG_EXPLOSION), 2 + COLUMNAS_EXPLO * getCuadro (), pantalla, x, y, FILAS_EXPLO, COLUMNAS_EXPLO, 0);
+
+    dibujarFlama (DERECHA, 16,0,3,4, pantalla);
+    dibujarFlama (IZQUIERDA, -16,0,1,0, pantalla);
+    dibujarFlama (ABAJO, 0,16,6,7, pantalla);
+    dibujarFlama (ARRIBA, 0, -16,6,5, pantalla);
+
+
+}
+
+Explosión bool :: colision (SDL_Rect y rect_coli) {
+    // COLISION CON EL EJE X de la Bomba
+
+    rect.x = x - Alcances [IZQUIERDA] * 16;
+    rect.y = y;
+    rect.w = alcances [IZQUIERDA] * 16 + 16 + alcances [DERECHA] * 16;
+    rect.h = 16;
+    si (rects_colisionan (rect, rect_coli))
+        return true;
+
+    // COLISION CON EL EJE Y de la Bomba
+    rect.w = 16;
+    rect.x = x;
+    rect.y = y - Alcances [ARRIBA] * 16;
+    rect.h = Alcances [arriba] * 16 + 16 + alcances [ABAJO] * 16;
+    si (rects_colisionan (rect, rect_coli))
+        return true;
+
+    falso retorno;
+     
+}
+
+
+// Fuente imagen 
+
+# include "fuente_imagen.hpp"
+
+FuenteImagen :: FuenteImagen (* SDL_Surface imagen, Orden char []) {
+    IMA = imagen;
+    strncpy (this-> ordenLetras, Orden, MAX_LETRAS_RECONOCIDAS);
+    identificarRects ();
+}
+
+/ * 
+ * Informa Si La columna (PARÁMETRO 2) Es Una linea completa de Pixeles
+ * Transparentes en la superficie ima (PARÁMETRO 1)
+ *
+ * Se ASUME Que El color de transparente es Aquel Que coinciden con el píxel
+ * SITUADO en la posicion (0,0) de la superficie.
+ * /
+bool FuenteImagen :: esColumnaVacia (int columna) {
+	Uint32 pixel_transparente = get_pixel (ima, 0, 0);
+	int fila;
+	
+	/ * Busca Un píxel opaco * /
+	para (fila = 0; fila <ima-> h; Fila ++) {
+		si (pixel_transparente! = get_pixel (ima, columna, fila))
+			falso retorno;
+	}
+
+	return true;
+}
+
+/ *
+ * Analiza la superficie ima buscando letras para registrarlas en el 
+ * Vector de rectángulos Fuentes (Segundo PARÁMETRO)
+ *
+ * Para analizar v, El Programa Recorre la imagen de Izquierda Derecha una
+ * 'Leyendo' Barras verticales de píxeles. Así Determina Donde Comienza
+ * Y Terminales Cada letra (Dębe Existir Una Separación de, Al menos, la ONU 
+ * Cada píxel Entre caracter)
+ * /
+anulará FuenteImagen :: identificarRects () {
+	int indice_letra = 0;
+	bool esta_recorriendo_letra = false;
+	int w = 0; / * Ancho de la letra * real /
+
+	for (int i = 0; i <ima-> w; i ++)
+	{
+		si (esColumnaVacia (i))
+		{
+			
+			/ * SI ESTABA leyendo Una letra then Encontró 
+			 * El ancho de La Misma * /
+			si (esta_recorriendo_letra)
+			{
+				Fuentes [indice_letra] .x = i - w;
+                Fuentes [indice_letra] .y = 0;
+                Fuentes [indice_letra] .w = w;
+                Fuentes [indice_letra] .h = ima-> h;
+				esta_recorriendo_letra = false;
+				indice_letra ++;
+			}
+		}
+		más
+		{
+			/ * Si està Recorriendo Una letra Aumenta el contador
+			 * Wide, en Caso contrario Encontró Donde Comienza
+			 * La siguiente letra
+			 * /
+			si (esta_recorriendo_letra)
+				w ++;
+			más
+			{
+				w = 1;
+				esta_recorriendo_letra = true;
+			}
+		}
+	}
+
+	cout << "Econtré" << << indice_letra "Letras en el archivo de fuentes \ n";
+}
+
+
+/ *
+ * Relaciona ONU caracter ONU de la estafa Número entero
+ * /
+int FuenteImagen :: obtener_indice (caracter char) {
+	int i;
+	
+	si (caracter == '')
+		volver 1;
+
+	for (i = 0; ordenLetras [i]; i ++)
+	{
+		si (== Bellas ordenLetras [i])
+			i volver;
+	}
+	
+	cout << "No Se Puede ENCONTRAR EL índice de:" << caracter << endl;
+	return -1;
+}
+
+
+/ *
+ * Imprime caracter de las Naciones Unidas Sobre la superficie horario de verano (generalmente de pantalla)
+ * /
+int FuenteImagen :: imprimir_letra (DST SDL_Surface *, int x, int y, char letra) {
+	srcrect SDL_Rect;
+	SDL_Rect dstrect = {x, y, 0, 0};
+	int indice = obtener_indice (letra);
+
+	si (letra == '')
+		Fuentes de regreso [0] .w;
+
+	
+	si (indice! = -1)
+	{
+		srcrect = Fuentes [indice];
+		SDL_BlitSurface (ima, y ​​srcrect, el horario de verano, y dstrect);
+	}
+	srcrect.w regresar;
+}
+
+/ *
+ * Imprime Una cadena de Textos completa Sobre la superficie referenciada
+ * POR EL PARÁMETRO imprimación
+ * /
+FuenteImagen vacío :: empate (pantalla SDL_Surface *, int x, int y, char * cadena)
+{
+	int i;
+	int dx = x;
+
+	for (i = 0; Cadena [i]; i ++)
+		dx = + imprimir_letra (pantalla, dx, y, Cadena [i]);
+}
+
+
+// galeria 
+
+# include "galeria.hpp"
+
+
+Galería :: galeria () {
+    #ifdef DEBUG
+    cout << "Constructor de galeria:" << esta << endl;
+    #terminara si
+    
+    Char ruta [60];
+    keyColor bool;
+    
+    ifstream filePar ( "datos / configuracion / images.txt");
+    if (! filePar)
+        mostrar_error ( "No se Pudo abrir archivo con RUTAS DE IMAGENES");
+    
+    for (int j = 0; j <_IMAGENES; j ++) {
+        filePar >> Ruta;
+        filePar >> keyColor;
+        baulimgs [j] = cargar_imagen (ruta, keyColor);
+    }
+    filePar.close ();
+    sonidoCargado = false;
+}
+
+anular la Galeria :: cargarSonidos () {
+    Char ruta_tmp [50];
+    if (! sonidoCargado) {
+         for (int i = 0; i <_SONIDOS; i ++) {
+                sprintf (ruta_tmp, "datos / sonidos / musica_% d.mid", i + 1);
+                snd_musicas [i] = cargar_musica (ruta_tmp);
+            }
+    
+    
+    
+         for (int i = 0; i <_EFECTOS; i ++) {
+                sprintf (ruta_tmp, "datos / sonidos / ping_% d.wav", i + 1);
+                sfx_efectos [i] = cargar_sonido (ruta_tmp);
+                Mix_VolumeChunk (sfx_efectos [i], 100);
+            }
+    
+        Mix_VolumeMusic (128);
+        sonidoCargado = true;
+    }
+    
+}
+
+Galería :: galeria ~ () {
+    #ifdef DEBUG
+    cout << "Destructor de galeria:" << esta << endl;
+    #terminara si
+
+    for (int i = 0; i <_IMAGENES; i ++) SDL_FreeSurface (baulimgs [i]);
+    si (sonidoCargado) {
+         for (int i = 0; i <_SONIDOS; i ++) Mix_FreeMusic (snd_musicas [i]);
+         for (int i = 0; i <_EFECTOS; i ++) Mix_FreeChunk (sfx_efectos [i]);
+    }
+}
+
+// Jugador jugador 
+
+# include "game_manager.hpp"
+
+GameManager :: GameManager () {
+     / * Inicializa la clase GameManager y La libreria * /
+     srand (time (0));
+     inter = NULL;
+     interfaz_last = NULL;
+
+     iniSDL ();
+     setModeVideo ();
+     
+     activarJoysticks (); / * Solo se Activan al inicio, Si la palanca de mando de la ONU se Conecta a la PC despues de Haber corrido this
+
+     salir = false;
+     / * Creamos las clases en memoria * /
+     galeria = new Galeria ();
+     si (snd_disponible) galeria-> cargarSonidos ();
+     salir = false;
+
+	// Inicializar Administrador de Marco
+	SDL_initFramerate (y FPSM);
+	SDL_setFramerate (y FPSM, 60); // 60 cuadros por segundo
+    SDL_WM_SetCaption ( "DestructionBombs", null);
+// SDL_VideoInfo ();
+}
+void GameManager :: iniSDL () {
+    si (SDL_WasInit (SDL_INIT_VIDEO |! SDL_INIT_AUDIO | SDL_INIT_JOYSTICK)) { 
+       si (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) <0) {
+           mostrar_error ( "No se Pudo inciar SDL");
+       }
+
+        atexit (SDL_Quit);
+
+        si (Mix_OpenAudio (MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 4096) <0) {
+            cerr << "[ADVERTENCIA]% s" << SDL_GetError ();
+            snd_disponible = false;
+        }más{
+            snd_disponible = true;
+            Mix_AllocateChannels (_PLAYERS + 1);
+        }
+        
+    }
+
+}
+
+GameManager vacío :: setModeVideo (bool pantalla_completa) {
+    Banderas int = 0;
+
+    si (pantalla_completa)
+        Banderas | = SDL_FULLSCREEN;
+
+    Banderas | = SDL_DOUBLEBUF | SDL_SWSURFACE;
+    
+    * SDL_Surface icono;    
+    icono = SDL_LoadBMP ( "datos / imagenes / Objetos / icono.bmp");
+     // Establecemos el icono
+    SDL_WM_SetIcon (icono, NULL); // Compatible con Ventanas
+    SDL_FreeSurface (icono);
+    
+    pantalla = SDL_SetVideoMode (W_SCREEN, H_SCREEN, 0, banderas);
+    si (pantalla!) {
+        mostrar_error ( "No se Pudo Crear Frame-buffer");
+    }
+
+    SDL_WM_SetCaption ( "Cargando ...", NULL);
+    SDL_FillRect (pantalla, NULL, SDL_MapRGB (screening> formato, 104104104));
+
+}
+
+anulará GameManager :: activarJoysticks () {
+     / * Y contamos Abrimos los joysticks Que Usara Nuestro Juego, Maximos 5 Que Distintos pueden Ser * /
+    joys_act = SDL_NumJoysticks ();
+     joys_act = (joys_act> 5) 5:? joys_act; // Podemos Esto Es Porque en solitario manejar 5 ... mas seria de error de las Naciones Unidas En Este Programa
+     for (int i = 0; i <joys_act; i ++) {
+          joysticks [i] = SDL_JoystickOpen (i); // Abrimos el Joystick
+     }
+     for (int i = joys_act; i <_PLAYERS; i ++)
+          joysticks [i] = NULL; // Los Espacios Que sobran los ponemos un valor NULL
+}
+SDL_Joystick * GameManager :: getJoy (int id) {
+    palancas de mando de retorno [ID];
+}
+int GameManager :: getJoysActivos () {
+    volver joys_act;
+}
+
+GameManager vacío :: cambiarInterfaz (Interfaz * Nueva) {
+     / * Cambia la Interfaz del Juego * /
+    #ifdef DEBUG
+        cout << "Cambiando Interfaz una" nueva << << endl;
+    #terminara si
+// Cout << "1" << endl;
+    si (interfaz_last && nueva! = interfaz_last) {        
+        #ifdef DEBUG
+            cout << "Interfaz Eliminando:" << interfaz_last << endl;
+        #terminara si
+        Eliminar interfaz_last; // Para Evitar Una mala accion
+        interfaz_last = NULL;
+    }
+// Cout << "Interfaz (ante la Asignación):" << << entre "Nueva:" << nueva << endl;
+    interfaz_last = entre otras;
+// Cout << "1" << endl;
+    inter = nueva;
+    #ifdef DEBUG
+        cout << "Interfaz:" << entre << endl;
+        cout << "Interfaz anterior:" << interfaz_last << endl;
+    #terminara si
+}
+
+int GameManager :: procesarEventos () {
+    = Completos static bool 1; // Pantalla Completa
+    SDL_Event evento;
+    mientras que (SDL_PollEvent (y evento)) {
+        interruptor (evento.type) {
+            SDL_Quit caso:
+                salir = 1;
+                return 0;
+            romper;
+            SDL_KEYDOWN caso:
+                if ((evento.key.keysym.sym == SDLK_RETURN && evento.key.keysym.mod y SDLK_LALT) ||
+                (Evento.key.keysym.sym == SDLK_f && evento.key.keysym.mod y SDLK_LALT)) {
+                    setModeVideo (completo);
+                    SDL_WM_SetCaption ( "DestructionBombs", null);
+
+                    completa = lleno!;
+                    return 0;
+                }
+                si (== evento.key.keysym.sym SDLK_F4 && evento.key.keysym.mod y SDLK_LALT) {
+                    salir = 1;
+                    return 0;
+                }
+
+            romper;
+        }
+        
+        inter> procesarEvento (y evento);
+    }
+    volver 1; // Se Puede continuar
+}
+
+
+GameManager vacío :: run () {
+    si volver (entre otras!);
+    while (salir) {
+        if (procesarEventos ()) {
+            inter> update ();
+            inter> dibujar (pantalla);
+         }
+        SDL_Flip (pantalla);
+        SDL_framerateDelay (y FPSM);
+    }
+
+}
+
+GameManager vacío :: juego (código CodeMusicEfecto) {
+    / * * Reproducir este pedazo de la ONU /
+    si (snd_disponible) Mix_PlayChannel (-1, galeria-> getMusicEfecto (código), 0);
+}
+GameManager vacío :: playSonido (código CodeMusicSonido) {
+    / * Reproducir una musica de fondo * /
+    = T_ini static int 0;
+    t_pas static int = 0;
+    
+    si (snd_disponible) {
+        if (SDL_GetTicks (-) t_ini <1,000) {/ * Si se reproducen Este sonido Seguidamente del anterior (1 s) * /
+            cerr << "ADVERTENCIA: Reproducción apresurada del sonido:" << código << endl;
+        }
+        Mix_PlayMusic (galeria-> getMusicSonido (código), -1);
+        t_ini = SDL_GetTicks ();
+    }
+}
+
+SDL_Surface * GameManager :: getImagen (código CodeImagen) {
+    volver galeria-> getImagen (código);
+}
+
+GameManager :: ~ GameManager () {
+    #ifdef DEBUG
+        cout << "Destructor de GameManager:" << esta << endl;
+    #terminara si
+
+    eliminar entre otras;
+    Eliminar interfaz_last;
+    Eliminar galeria;
+
+    for (int i = 0; i <joys_act; i ++)
+        si (joysticks [i] && SDL_JoystickOpened (i))
+            SDL_JoystickClose (joysticks [i]);
+            
+    si (snd_disponible)
+        Mix_CloseAudio ();
+    cout << "Fin del juego ... visita: http: //baulprogramas.blogspot.com/ \ n";
+}
+
+/ *
+anulará GameManager :: cargarDatos () {  
+    fs ifstream (RUTA_CONFIG);
+    if (!) {fs
+        cerr << "Abriendo error: -" << RUTA_CONFIG << endl;
+        maxTerrenosBatalla = 0;
+        puntaje_mayor = 0;
+    }
+    fs >> maxTerrenosBatalla;
+    fs >> puntaje_mayor;
+    fs.close ();
+}
+
+
+
+anulará GameManager :: guardarDatos () {
+    fs ofstream (RUTA_CONFIG);
+    fs << maxTerrenosBatalla << endl;
+    fs << puntaje_mayor << endl;
+    fs.close ();
+}
+
+int GameManager :: getMaxTerrenoBatalla () {
+    volver maxTerrenosBatalla;
+}
+* /
+
+
+/ * SDL_Surface GameManager :: getPreviewTerreno (int id, int id_tile) {
+     Nivel volver :: getPreviewTerreno (id, id_tile, galeria);
+}
+
+void GameManager :: cargarFileNivel (char * buffer de ruta, char []) {
+     Nivel :: cargarFileNivel (tampón, ruta);
+}
+
+anulará GameManager :: dibujarNivel (char * mapa, int id_tile, SDL_Surface * súper) {
+     Nivel :: empate (mapa, galeria-> azulejos [id_tile], super);
+* /
+
+// globo 
+
+/ * # Include "globo.h"
+# include "objetos.h"
+# include "nivel.h"
+# include "player.h"
+# include "motor / util.h"
+
+Globo * globo_crear () {
+    * Globo globo;
+    globo = (Globo *) malloc (sizeof (Globo));
+    si (Globo == NULL) mostrar_error ( "Error asignando memoria de un globo de la ONU");
+    Globo de regreso;
+}
+
+globo_iniciar void (* Globo Globo, Personajes * personajes, int id) {
+    globo-> Personajes = personajes;
+    globo-> en_pantalla = 0;
+	globo-> rect_coli.w = 13; // rectangulo Que represen un personaje es una traducción
+	globo-> rect_coli.h = 10; // rectangulo Que represen un personaje es una traducción
+    globo-> ID = id;
+    globo-> protegido = 0;
+}
+
+globo_activar void (* Globo Globo, int x, int y) {
+    static int estados_rand [4] = {DERECHA, IZQUIERDA, ABAJO, ARRIBA};
+
+    globo-> delay_mover = 0;
+    globo-> delay_para_morir = 0;
+    globo-> Paso = 0;
+    globo-> delay_quitar_proteccion = 0;
+    globo-> cuadro = 0;
+    globo-> delay = 0;
+// Globo-> Vidas = 1;
+    globo-> incremento_x = 0;
+    globo-> incremento_y = 0;
+    globo-> en_pantalla = 1;
+	globo-> muerto = 0;
+    globo_set_coor (globo, x, y);
+    globo_cambiar_estado (Globo, estados_rand [rand ()% 4]);
+ }
+globo_actualizar void (* Globo Globo)
+{
+    estática const int estados_rand [4] = {DERECHA, IZQUIERDA, ABAJO, ARRIBA};
+    int colision_explo;
+
+	globo_avanzar_animacion (Globo); // Avanzamos la animacion
+
+    si (globo-> Estado! = Muriendo) {
+        globo_actualizar_rect_colision (Globo);
+
+        if (! globo_mover (globo))
+            globo_cambiar_estado (Globo, estados_rand [rand ()% 4]);
+
+        if (! globo-> protegido) {
+            colision_explo=objetos_colision_con_explosiones(globo->personajes->juego->objetos,&globo->rect_coli,-1);
+            si (colision_explo) {
+                globo_cambiar_estado (Globo, Muriendo);
+                player_aumentar_puntaje(globo->personajes->players[globo->personajes->juego->objetos->explosiones[colision_explo-1]->lanzador],50);
+            }
+        }
+        else if (++ globo-> delay_quitar_proteccion> DELAY_PROTECCCION) {
+            globo-> protegido = 0;
+            globo-> delay_quitar_proteccion = 0;
+        }
+
+        } Else if (globo-> estado == Muriendo && globo-> delay_para_morir ++> 100) {
+            globo_desactivar (Globo);
+            globo-> delay_para_morir = 0;
+        }
+
+
+}
+
+int globo_colision (Globo Globo *, * SDL_Rect rect_coli) {
+    globo_actualizar_rect_colision (Globo);
+    rects_colisionan volver (y globo-> rect_coli, rect_coli);
+}
+
+globo_colision_con_otros int (* Globo Globo) {
+    regístrese int i;
+        / * Este codigo se Dębe Modificar si pongo la ONU enemigo Que hay mar el "Globo" O Sino no detectara la colision con el * /
+
+	   / * For (i = 0; i <globo-> personajes-> globos_actuales; i ++) {
+            Basicamente // Lo que hace? Esto Es comprobar v colision con los globos de los alrededores
+	       if ((globo-> personajes-> globos [i] -> en_pantalla) && (i = globo-> id)) {
+                if(globo->personajes->globos[i]->estado!=MURIENDO&&globo_colision(globo->personajes->globos[i],&globo->rect_coli)){
+                        vuelvo i + 1;
+
+                } // Fin si colision con globo
+
+            } // Si la aleta activo globo
+        } // Fin de
+    return 0;
+}
+
+int globo_mover (* Globo Globo) {
+    int nula = 0; Cuya variables nula unica funcion es pasarla Como parametro un "niveles_colisiona" para ningún error lógico Generar ONU
+    / * Estado_globo_colision Estados;
+    estática const int estados_rand [4] = {DERECHA, IZQUIERDA, ABAJO, ARRIBA};
+
+    si (++ globo-> delay_mover> 3) {// Para Que El enemigo no se mueva a la Misma Velocidad Que El personaje principal de
+        globo-> delay_mover = 0;
+        globo-> rect_coli.x + = globo-> incremento_x;
+        globo-> rect_coli.y + = globo-> incremento_y;
+
+
+        si (nivel_colisiona (globo-> personajes-> juego-> Nivel, y globo-> rect_coli, y null))
+            return 0;
+
+        null = globo_colision_con_otros (Globo);
+        Si (null) {
+            estado_globo_colision = globo-> personajes-> globos [null-1] -> estado;
+            hacer
+                globo_cambiar_estado (Globo, estados_rand [rand ()% 4]);
+            mientras que (globo-> estado == invertir_estado (estado_globo_colision));
+        }
+
+        si (objetos_colision_con_bombas (globo-> personajes-> juego-> Objetos, y globo-> rect_coli))
+            return 0;
+        globo-> x + = globo-> incremento_x;
+        globo-> y + = globo-> incremento_y;
+    }
+    volver 1;
+
+}
+
+globo_imprimir void (* Globo Globo, pantalla SDL_Surface *) {
+    	imprimir_desde_grilla (globo-> personajes-> juego-> mundo-> galeria-> grilla_globo, globo-> cuadro, pantalla, globo-> x, globo-> y, 1, 6, globo-> estado == Muriendo || Globo -> protegido);
+
+
+}
+
+globo_desactivar void (* Globo Globo) {
+    globo-> en_pantalla = 0;
+	globo-> muerto = 1;
+}
+
+globo_actualizar_rect_colision void (* Globo Globo) {
+    globo-> rect_coli.x = globo-> x + 2;
+    globo-> rect_coli.y = globo-> y + 2;
+}
+
+
+globo_avanzar_animacion void (* Globo Globo)
+{
+	static int animacion [7] = {0,1,2,3,4,5, -1};
+	si (++ globo-> retardo> 15) {
+		globo-> delay = 0;
+		si (animacion [++ globo-> Paso] == -1)
+    		globo-> Paso = 0;
+	}
+	globo-> cuadro = animacion [globo-> Paso];
+
+}
+
+globo_cambiar_estado void (* Globo Globo, Estados nuevo) {
+	globo-> estado = nuevo;
+	cambiar (globo-> estado) {
+        caso DERECHA:
+            globo-> incremento_x = 1;
+            globo-> incremento_y = 0;
+            romper;
+        IZQUIERDA caso:
+            globo-> incremento_x = -1;
+            globo-> incremento_y = 0;
+            romper;
+        ARRIBA caso:
+            globo-> incremento_x = 0;
+            globo-> incremento_y = -1;
+            romper;
+        ABAJO caso:
+            globo-> incremento_x = 0;
+            globo-> incremento_y = 1;
+            romper;
+        Muriendo caso: romper;
+        defecto:
+            printf ( "Error en Estados del globo \ n");
+        }
+
+}
+
+
+globo_set_coor void (* Globo Globo, int x, int y) {
+    globo-> x = x;
+    globo-> y = y;
+} * /
+
+// elemento 
+
+# include "item.hpp"
+
+Artículo :: Artículo (* Juego juego, int x, int y, int tipo, int id):
+    Animacion (NULL, 0,0 ", 0,1", x, y, id) {
+    this-> = juego juego;
+    type = PUNTO;
+    loop = -1;
+    
+    if(!juego->getPuertaAbierta()&&juego->getTipoJuego()==TIPO_NORMAL&&y==juego->getYPuerta()&&x==juego->getXPuerta()){
+        this-> tipo = ITEM_PUERTA;
+        juego-> setPuertaAbierta (true);
+        }
+    más
+        this-> tipo = tipo;
+
+}
+
+vacío de artículos :: empate (SDL_Surface pantalla *) {
+    si (x + 16> 0 && x <W_SCREEN && y <H_SCREEN && y + 16> 0)
+    	imprimir_desde_grilla (juego-> getImagen (IMG_ITEM), tipo / 8 * 8 + tipo + 8 * getCuadro (), pantalla, x, y, 6,8,0);
+}
+
+// JUEGO 
+
+# include "juego.hpp"
+
+/ *
+*
+*
+* FALTA ONU para contactar BLOQUE EN LLAMAS
+*
+*
+* /
+
+Juego :: Juego (* GameManager juego) {
+    #ifdef DEBUG
+    cout << "Constructor de Juego:" << esta << endl;
+    #terminara si
+    this-> = juego de juego;
+
+    sprites = nuevo grupo (este);
+    datos = NULL;
+    clockTick = NULL;
+    pausado = hold_start = false;
+    
+    id_quien_pauso = PLAYER_NONE;
+    id_quien_pauso_anterior = PLAYER_NONE;
+    
+    Estado = JUEGO;
+    _Quit = false;
+    estado_siguiente = nada;
+    SDL_ShowCursor (SDL_DISABLE);
+
+    totalSprite [GLOBO] = 20;
+    totalSprite [EXPLOSIÓN] = MAX_BOMBAS;
+    totalSprite [PUNTO] = 30;
+    totalSprite [BOMBA] = MAX_BOMBAS;
+    totalSprite [REPRODUCTOR] = 5;
+    totalSprite [BLOQUE] = 20;
+    totalSprite [ANIMACION] = 20;
+}
+
+Juego anular :: crearReferencias () {
+    / * Inicia y CREA las Estructuras para Administrar los personajes * /
+    
+    for (int i = 0; i <_REFERENCIADOS; i ++) {
+        refeSprites [i] = new Sprite * [totalSprite [i]];
+        spriteActivos [i] = 0;
+        for (int j = 0; j <totalSprite [i]; j ++)
+            refeSprites [i] [j] = NULL;
+    }
+    
+}
+Juego anular :: procesarEvento (* SDL_Event evento) {
+    interruptor (evento-> type) {
+        SDL_KEYDOWN caso:
+             interruptor (evento-> key.keysym.sym) {
+                SDLK_ESCAPE caso:
+                    salir ();
+                    romper;
+                SDLK_TAB caso:
+                     / * Si (estado! = DISPLAY_MSG &&! Pausado) {
+                         mostrar_kills = mostrar_kills!;
+                         if (mostrar_kills)
+                             juego_preparar_kills (JUEGO);
+                     } * /
+                     romper;
+             }
+        romper;
+        
+    }
+    
+}
+
+Juego anular :: displayMensage (const char * MENSAGE) {
+  // Realiza Operaciones párrafo PRESENTAR UN MENSAGE al usuario
+
+  Estado = DISPLAY_MSG;
+  y_msg = x_msg = 0;
+  'vel_y' = 0,0;
+  strncpy (msg_mostrar, MENSAGE, 50);
+  estado_siguiente = JUEGO;
+}
+
+
+Juego vacío :: estadoDisplayMensage () {
+// Sobre efecto texto (Autor: Hugo Ruscitii -http: //www.loosersjuegos.com.ar-) 
+    int dir estática = 1;
+
+    x_msg + = dir;
+	'vel_y' + = 0,1;
+	si (y_msg> = H_SCREEN / 2 && 'vel_y'> 0)
+	{
+		'vel_y' - = 1,2; // Pierde fuerza al tocar el suelo
+		'vel_y' * = -1;
+        if ((int) 'vel_y' == 0)
+        {
+            'vel_y' = 0;
+           Estado = estado_siguiente;
+// RETRASO = 50;
+           si (_Quit) {
+                salir ();
+            }
+        }
+	}
+	más{
+		y_msg + = (int) 'vel_y';
+	}
+	si (x_msg> W_SCREEN-200)
+	   dir = -1;
+	else if (x_msg <80)
+	   dir = 1;
+}
+
+Juego vacío :: juego (código CodeMusicEfecto) {
+     juego-> play (código);
+}
+Juego anular :: playSonido (código CodeMusicSonido) {
+     juego-> playSonido (código);
+}
+
+int Juego :: getActivos (tipo TipoSprite) {
+    volver spriteActivos [tipo];
+}
+
+Juego vacío :: clearSprites (elimina_players Bool) {
+    / * Elimina TODAS LAS "all_clear" referencias de refeSprites si ESPECIFICA chino no se borrara los jugadores ni los cuadros en memoria * /
+    #ifdef DEBUG
+        cout << "Llamado a clearSprites" << endl;
+    #terminara si
+     int cuenta = 0;
+     for (int i = 0; i <_REFERENCIADOS; i ++) {
+        si continuar (elimina_players && i == JUGADOR!);
+        
+        si (spriteActivos [i]> 0) {
+             for (int j = 0; j <totalSprite [i]; j ++) {
+                 if (refeSprites [i] [j]! = NULL) {
+                     sprites-> Borrar (refeSprites [i] [j]);
+                    #ifdef DEBUG
+                        cout << "Eliminando Sprite:" << refeSprites [i] [j] << endl;
+                    #terminara si
+                     Eliminar refeSprites [i] [j];
+                     refeSprites [i] [j] = NULL;
+                     si (++ recuento == spriteActivos [i]) {
+                         spriteActivos [i] = 0;
+                         count = 0;
+                         romper;
+                     }
+                }
+             }
+        }
+     }
+     
+}
+
+int Juego :: getLanzador (tipo TipoSprite, int id_spri) {
+    Si (tipo == == BOMBA || tipo de explosión)
+        volver static_cast <Bomba *> ((refeSprites [tipo] [id_spri])) -> getLanzador ();
+}
+
+int Juego :: getTipoItem (int id_item) {
+         volver static_cast <Elemento *> (refeSprites [PUNTO] [id_item]) -> getTipoItem ();
+}
+
+bool Juego :: isActivo (tipo TipoSprite, int id) {
+     Si (tipo == REPRODUCTOR)
+         ! Devolver refeSprites [tipo] [id] = NULL && static_cast <jugador *> (refeSprites [tipo] [id]) -> isActivo ();
+     más
+         refeSprites de retorno [tipo] [id] = NULL!;
+}
+
+Juego anular :: setPuntaje (IdPlayer de id, int nuevo) {
+     static_cast <jugador> * ((refeSprites [REPRODUCTOR] [id])) -> setPuntaje (nuevo);
+}
+
+int Juego :: getPuntaje (IdPlayer id) {
+     volver static_cast <jugador *> ((refeSprites [REPRODUCTOR] [id])) -> getPuntaje ();
+}
+
+Juego :: anular (id IdPlayer, EstadoSprite nuevo) setEstadoPlayer {
+     static_cast <jugador> * ((refeSprites [REPRODUCTOR] [id])) -> cambiarEstado (nuevo);
+}
+
+int Juego :: getSegundosInicioNivel () {
+    volver clockTick-> getTickInicial ();
+}
+int Juego :: getActivos (tipo TipoSprite, int & id) {
+    for (int i = 0; i <totalSprite [tipo], spriteActivos [tipo]; i ++)
+        if ((refeSprites [tipo] [i]! = NULL && tipo! = JUGADOR) ||
+        (Tipo == REPRODUCTOR && isActivo (REPRODUCTOR, i))) {
+             id = i;
+             volver spriteActivos [tipo];
+        }
+    return 0;
+}
+
+Juego vacío :: setActivos (tipo TipoSprite, int Nuevo) {
+    spriteActivos [tipo] = nuevo;
+}
+
+int Juego :: getActivosId (tipo TipoSprite, IdPlayer id) {
+    / * Obtiene Todos Los personajes Activos Cuyo Lanzador FUE EL ID * /
+    int cuenta = 0;
+    si (spriteActivos [tipo]) {
+        for (int i = 0; i <totalSprite [tipo]; i ++) {
+            si (refeSprites [tipo] [i] = NULL && (tipo == == BOMBA || tipo de explosión) && static_cast <Bomba *> (refeSprites [tipo] [i]) -> getLanzador () == id) {
+                 contar ++;
+            }
+        }
+    }
+    recuento de retorno;
+}
+
+Juego anular :: killSprite (tipo int, int id_sprite) {
+     si (refeSprites [tipo] [id_sprite]! = NULL) {
+         refeSprites [tipo] [id_sprite] -> kill ();
+         spriteActivos [tipo] -;
+         Sprite * SPRI = refeSprites [tipo] [id_sprite]; // Por si se necesitan sable Datos delsprite Que se eliminra los antes de Hacerlo
+         refeSprites [tipo] [id_sprite] = NULL; / * Notese Que El grupo "sprites" referenciandolo sige, El por Lo Que
+         se encargara de eliminarlo de memoria * /
+
+         si (== Tipo de Bomba) {
+             / * Se de Agrega Una explosión en la posicion de la bomba con el Alcance Que ella tenia * /
+             addSprite (EXPLOSIÓN
+                 spri-> getX (), spri-> getY (),
+                 static_cast <Bomba *> (SPRI) -> getLanzador (), static_cast <Bomba *> (SPRI) -> getAlcance ());
+             
+         }
+         / * Else if (tipo == BOMBA) {
+             / * Se de Agrega Una explosión en la posicion de la bomba con el Alcance Que ella tenia
+             addSprite (EXPLOSIÓN
+                 refeSprites [tipo] [id_sprite] -> getX (), refeSprites [tipo] [id_sprite] -> getY (),
+                 refeSprites [tipo] [id_sprite] -> getLanzador (), refeSprites [tipo] [id_sprite] -> getAlcance ());
+             
+         } * /
+     }
+     
+}
+Juego anular :: soloKill (tipo int, int id_sprite) {
+     si (refeSprites [tipo] [id_sprite]! = NULL) {
+         refeSprites [tipo] [id_sprite] -> kill ();
+         spriteActivos [tipo] -;
+         refeSprites [tipo] [id_sprite] = NULL; / * Notese Que El grupo "sprites" referenciandolo sige, El por Lo Que
+         se encargara de eliminarlo de memoria * /
+     }
+     
+}
+Juego vacío :: borrado (tipo int, int id_sprite) {
+    // Elimina parcialmente un sprite de la ONU ya Que No he aquí Muestra Pero Sigue en memoria
+     si (refeSprites [tipo] [id_sprite]! = NULL) {
+         spriteActivos [tipo] -;
+         sprites-> borrado (refeSprites [tipo] [id_sprite]);
+    }
+}
+
+Juego anular :: addSprite (Sprite * SPRI) {
+    Regresar int;
+    if (spriteActivos [spri-> getTipo ()] == totalSprite [spri-> getTipo ()]) {
+        Eliminar SPRI;
+        SPRI = NULL;
+    }
+
+    for (int i = 0; i <totalSprite [spri-> getTipo ()]; i ++) {
+            if (refeSprites [spri-> getTipo ()] [i] == NULL) {
+                refeSprites [spri-> getTipo ()] [i] = SPRI;
+                spriteActivos [spri-> getTipo ()] ++;
+                sprites-> add (refeSprites [spri-> getTipo ()] [i]);
+                refeSprites [spri-> getTipo ()] [i] -> setId (i);
+                regreso;
+            }
+    }
+    regreso ;
+}
+
+int Juego :: addSprite (tipo int, int x, int y, int Lanzador, int otra_var) {
+    si (spriteActivos [tipo] == totalSprite [tipo]) return -1; // No Hay Espacio
+
+    for (int i = 0; i <totalSprite [tipo]; i ++) {
+            si (refeSprites [tipo] [i] == NULL) {
+                si (== Tipo de Bomba)
+                    refeSprites [tipo] [i] = new Bomba (getImagen (IMG_BOMBA), x, y, static_cast <jugador *> (refeSprites [REPRODUCTOR] [Lanzador]) -> (getAlcanceBombas), (IdPlayer) Lanzador, i);
+                else if (tipo == explosión)
+                    refeSprites [tipo] [i] = nueva explosión (esto, x, y, otra_var, (IdPlayer) Lanzador, i); / * otra_var = Alcance * /    
+                else if (tipo == TEMA)
+                    refeSprites [tipo] [i] = new Artículo (esto, x, y, Lanzador, i); / * Lanzador = TipoItem * /    
+                else if (tipo == BLOQUE)
+                    refeSprites [tipo] [i] = new Bloque (esto, x, y, i); / * Lanzador = TipoItem * /    
+                else if (tipo == Globo)
+// refeSprites [tipo] [i] = nueva explosión (esto, x, y, otra_var, Lanzador) / * * otra_var = Alcance /  
+                    cout << "No implementado todavía" << endl;  
+
+                spriteActivos [tipo] ++;
+                sprites-> add (refeSprites [tipo] [i]);
+                i volver;
+            }
+    }
+    return -1;
+                
+}
+Juego anular :: getPosicion (tipo TipoSprite, int id, int & x, int & y) {
+     x = refeSprites [tipo] [id] -> getX ();
+     y = refeSprites [tipo] [id] -> getY ();
+}
+
+
+int Juego :: colision (SDL_Rect y rect_coli, int * lado_colision, solo_bloques_duros Bool) {
+    / * Comprueba si la ONU rect colisiona con el Nivel * /
+    volver mapa-> colision (y rect_coli, lado_colision, solo_bloques_duros);
+}
+
+int Juego :: colision (tipo TipoSprite [], int tamanyo, SDL_Rect y rect_coli) {
+    / * Detecta colisiones por conjuntos de colision * /
+    int id_coli;
+    for (int i = 0; i <tamanyo; i ++) {
+        id_coli = colision (tipo [i], rect_coli);
+        if (! id_coli = - 1) id_coli regresar;
+    }
+    return -1;
+}
+int Juego :: colision (tipo TipoSprite, SDL_Rect y rect_coli, int id_ignorar) {
+    / * Regresa Verdadero si "rect_coli" colisiona ONU de la estafa de Sprite refeSprites [TIPO] * /
+    Si (tipo == NIVEL) {
+       int err = colision (rect_coli, y err, false);
+       retorno (err) 1: 1;?
+    } Else if (spriteActivos [tipo]> 0) {
+        int cont = 0;
+	    for (int i = 0; i <totalSprite [tipo]; i ++) {
+	       si (refeSprites [tipo] [i]! = NULL && i! = id_ignorar) {
+                    si (refeSprites [tipo] [i] -> colision (rect_coli)) {
+                            i volver; // regresa el indice de colisiona con quien 
+                    }
+                si (cont ++ == spriteActivos [tipo]) return -1;
+            }
+        }
+    }
+    return -1;
+}
+
+Juego anular :: update ()
+{// Actualiza la logica del juego
+    interruptor (estado) {
+        caso PLAY:
+             si estadoPlay () (animandoEntradaMapaVertical!);
+             romper;
+        DISPLAY_MSG caso:
+             estadoDisplayMensage ();
+             romper;
+        }
+    si (animandoEntradaMapaVertical) {
+        Desplazamiento + = 2;
+        mapa-> setEjeVisualizacion (mapa-> getEjeX (), H_SCREEN-Desplazamiento);
+        si (H_SCREEN-Desplazamiento <= mapa-> getEjeY ()) {
+            animandoEntradaMapaVertical = false;
+        }
+    }
+
+}
+Juego vacío :: empate (SDL_Surface pantalla *) {
+     
+    dibujar_objeto (juego-> getImagen ((CodeImagen) mapa-> getIdFondo ()), 0,0, pantalla);
+    drawBarra (pantalla); // imprimimos La Barra MENSAGE
+    mapa-> empate (pantalla); // imprimimos El Nivel
+    sprites-> dibujar (pantalla);
+
+    si (pausado) {
+        imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_5), 80.100, "pausa", STR_NORMAL);
+        imprimir_desde_grilla (juego-> getImagen (IMG_CARAS_BOMBERMAN), id_quien_pauso * 2, pantalla, 130,90,1,10,0);
+    }
+    si (estado == DISPLAY_MSG) imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_6), x_msg, y_msg, msg_mostrar, STR_MAX_ESTENDIDA);
+}
+
+Juego vacío :: setProteccion (tipo TipoSprite, int id, int nuevo) {
+     Si (tipo == == GLOBO || tipo REPRODUCTOR) {
+         static_cast <jugador *> (refeSprites [tipo] [id]) -> setProteccion (nuevo);
+     }
+}
+
+Juego anular :: setRepeticionBomba (int id, int nuevo) {
+     si (refeSprites [BOMBA] [id]! = NULL)
+         static_cast <Bomba *> (refeSprites [BOMBA] [id]) -> setRepeticion (nuevo);
+}
+bool Juego :: isBloqueRompible (int x, int y) {
+     volver mapa-> isBloqueRompible (x, y);
+}
+bool Juego :: isBloqueDuro (int x, int y) {
+    volver mapa-> getTipoBloque (x, y) == :: Mapa BLOQUE_METAL;
+}
+bool Juego :: getPuertaAbierta () {
+     p_abierta regresar;
+}
+
+bool Juego :: isBloqueItem (int x, int y) {
+     volver mapa-> getTipoBloque (x, y) == :: Mapa BLOQUE_ITEM;
+}
+
+Juego anular :: setPuertaAbierta (bool nuevo) {
+     p_abierta = nuevo;
+}
+
+Juego anular :: romperBloque (int x, int y) {
+    mapa-> romperBloque (x, y);
+}
+
+int Juego :: getJoysActivos () {
+    volver juego-> getJoysActivos ();
+}
+SDL_Joystick * Juego :: getJoy (int id) {
+    volver juego-> getJoy (id);
+}
+
+Juego anular :: controlaPausa (Uint8 * Teclas) {
+    / * SI ALGUN JUGADOR SE PRESIONO START PAUSA EL JUEGO * /
+    si (hold_start!) {
+        for (int i = 0; i <totalSprite [REPRODUCTOR]; i ++) {
+            si (isActivo (REPRODUCTOR, i) && \
+                static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> IsPressed (TECLA_START, Teclas)) {
+                si (pausado) {
+                    pausado = true;
+                    inicio_pausa = tiempo (0);
+                    id_quien_pauso = (IdPlayer) i;
+                    play (SFX_CAMPANADA);
+                } Else if (id_quien_pauso == (IdPlayer) i) {
+					pausado = false;
+					clockTick-> setTicksPerdidos (clockTick-> getTickPerdidos () + tiempo (0) -inicio_pausa);
+					id_quien_pauso_anterior = id_quien_pauso; // Se guarda el reproductor Que habia puesto m pausa, párr Que No Mantenga presionada START
+					id_quien_pauso = PLAYER_NONE;
+					play (SFX_TONO_ACUATICO);
+                    
+                }
+                romper;
+            }
+        }
+    }
+
+	si (id_quien_pauso! = PLAYER_NONE)
+		hold_start = static_cast <jugador> * (refeSprites [REPRODUCTOR] [id_quien_pauso]) -> IsPressed (TECLA_START, Teclas);
+	else if (id_quien_pauso_anterior! = PLAYER_NONE)
+		hold_start = static_cast <jugador> * (refeSprites [REPRODUCTOR] [id_quien_pauso_anterior]) -> IsPressed (TECLA_START, Teclas);
+}
+
+int Juego :: getTipoNuevoItem (bool disminuir_de_mapa) {
+
+    Tipos static int [5] = {artículo :: ITEM_BOLA_ARROZ,
+                         De artículo :: ITEM_PASTEL,
+                         De artículo :: ITEM_PALETA,
+                         De artículo :: ITEM_BARQUILLA,
+                         De artículo :: ITEM_MANZANA};
+
+    int tmp = rand ()% 1200, indice;
+    si (tmp <10 && tmp> = 0) = indice de artículos :: ITEM_BOMBA_MAX; //0.8% Probabilidades de Aparecer
+    else if (tmp <20 && tmp> = 10) = indice de artículos :: ITEM_ALCANCE_MAX; // 0,8%
+    else if (tmp <120 && tmp> = 20) = indice de artículos :: ITEM_ALCANCE; // 8%
+    else if (tmp <180 && tmp> = 120) = indice de artículos :: ITEM_VIDA; // 4%
+    else if (tmp <280 && tmp> = 180) = indice de artículos :: ITEM_BOMBA; // 8% 
+    else if (tmp <330 && tmp> = 280) indice = artículo :: ITEM_ATRAVIESA_PAREDES; // 4% 
+    else if (tmp <430 && tmp> = 330) = indice de artículos :: ITEM_PROTECCION; // 8%
+    else if (tmp <530 && tmp> = 430) = indice de artículos :: ITEM_ALEATORIO; // 8%
+    else if (tmp <580 && tmp> = 530) = indice de artículos :: ITEM_PATINETA; // 4%
+    else if (tmp <630 && tmp> = 580) = indice de artículos :: ITEM_CORAZON; // 4%
+    else if (tmp <680 && tmp> = 630) = indice de artículos :: ITEM_ATRAVIESA_BOMBAS; // 4%
+    otra cosa indice = Tipos [rand ()% 5]; // 54%
+    
+    si (disminuir_de_mapa && mapa-> getNumItems ()> = 1)
+            mapa-> setNumItems (mapa-> getNumItems () - 1); 
+    
+    indice de retorno;
+}
+
+Juego anular :: moveAllSprites (int aumX, int aumY) {
+     int cuenta = 0;
+     for (int i = 0; i <_REFERENCIADOS; i ++) {
+        si (spriteActivos [i]> 0) {
+             for (int j = 0; j <totalSprite [i]; j ++) {
+                 if (refeSprites [i] [j]! = NULL) {
+                     refeSprites [i] [j] -> setX (refeSprites [i] [j] -> getX () + aumX);
+                     refeSprites [i] [j] -> setY (refeSprites [i] [j] -> getY () + aumY);
+                     si (++ recuento == spriteActivos [i]) {
+                         count = 0;
+                         romper;
+                     }
+                }
+             }
+        }
+     }
+}
+
+Juego :: ~ Juego () {
+        #ifdef DEBUG
+        cout << "Destructor de Juego:" << esta << endl;
+        #terminara si
+
+     for (int i = 0; i <_REFERENCIADOS; i ++) {
+        for (int j = 0; j <totalSprite [i]; j ++) {
+            if (refeSprites [i] [j]! = NULL) {
+                Eliminar refeSprites [i] [j];
+                refeSprites [i] [j] = NULL;
+                }
+        }
+        delete [] refeSprites [i];
+     }
+        eliminar los sprites;
+        Eliminar mapa;
+        borrar datos;
+        Eliminar clockTick;
+}
+
+// JUEGO BATALLA 
+
+# include "juego_batalla.hpp"
+
+
+JuegoBatalla :: JuegoBatalla (* GameManager juego, int idTerrenoBatalla, bool playerEnBatalla [_PLAYERS], Minutos int, int victorias): Juego (juego) {
+    #ifdef DEBUG
+    cout << "Constructor de JuegoBatalla:" << esta << endl;
+    #terminara si
+
+    EjeX = 27;
+    EjeY = 54;
+    mapa = nuevo mapa (esto, EjeX, EjeY);
+
+    totalSprite [GLOBO] = 0;
+    crearReferencias ();
+    
+    this-> idTerrenoActual = idTerrenoBatalla;
+    setMapaPlay (idTerrenoBatalla, false);
+    
+    * Reproductor de player_;
+    for (int i = 0; i <_PLAYERS; i ++) {
+        batallasGanadas [i] = 0;
+        si (playerEnBatalla [i]) {
+             spriteActivos [REPRODUCTOR] ++;
+             player_ = nuevo jugador (este, (IdPlayer) i, \
+                                      data-> getX (i), \
+                                      data-> getY (i), \
+                                      Datos-> getVidas (), \
+                                      Datos-> getBombas (), \
+                                      Datos-> getAlcanceBombas ());
+            refeSprites [REPRODUCTOR] [i] = player_;
+            sprites-> añadir (player_);
+        }
+    }
+    
+    displayMensage ( "¡Que gane el mejor!"); // Se presenta el MENSAGE Con ​​El Nivel real
+// Estado_siguiente = JUEGO;
+    id_lider_ganadas = PLAYER_NONE;
+    SDL_ShowCursor (SDL_DISABLE);
+    min = Minutos * 60;
+    vic = victorias;
+    mapa-> setImgTiles (juego-> getImagen (IMG_TILES));
+}
+
+anulará JuegoBatalla :: crearReferencias () {
+    for (int i = 0; i <_REFERENCIADOS; i ++) {
+        si (totalSprite [i]) {
+            refeSprites [i] = new Sprite * [totalSprite [i]];
+            spriteActivos [i] = 0;
+            for (int j = 0; j <totalSprite [i]; j ++) {
+                refeSprites [i] [j] = NULL;
+            }
+        }
+    }
+}
+
+JuegoBatalla vacío :: setMapaPlay (int idTerreno, comprobar_players bool) {
+    Char ruta [30], ruta2 [50];
+    sprintf (ruta, "datos / Niveles / Batalla /% d.txt", idTerreno + 1);    
+    sprintf (ruta2, "datos / Niveles / Batalla /% d.map", idTerreno + 1);
+    si (datos) eliminar datos;
+    datos = new DatNivel (RUTA);
+    si (clockTick) borrar clockTick;
+    clockTick = new TimeController ();
+    clockTick-> setTicksPerdidos (4);
+    
+    if (comprobar_players) {
+        for (int i = 0; i <_PLAYERS; i ++) {
+            si (refeSprites [REPRODUCTOR] [i]) // {si fue Elegido Para Que Batalle
+                if (! isActivo (REPRODUCTOR, i)) {// si no esta en Pantalla
+                    sprites-> add (refeSprites [Jugador] [i]);
+                    spriteActivos [REPRODUCTOR] ++;
+                } / * Else {// si sobrevivio a la batalla
+                    static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> posicionInicial ();
+                } * /
+                static_cast <jugador> * (refeSprites [Player] [i]) -> setVidas (data-> getVidas ());
+                static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> Reiniciar ();
+            }
+        }
+    }
+
+    clearSprites ();
+    mapa-> cargarDeArchivoBin (ruta2, ruta);
+    mapa-> setEjeVisualizacion (mapa-> getEjeX (), H_SCREEN);
+    mapa-> setItems ();
+
+    playSonido ((CodeMusicSonido) (4 + rand ()% 1));
+    muertosPorTiempo = false;
+    repro_war = false;
+    Iniciado = false;
+    patinesLanzados = false;
+    bombasMaxLanzado = false;
+    alcanceMaxLanzado = false;
+    animandoEntradaMapaVertical = true;
+    Desplazamiento = 0;
+}
+
+int JuegoBatalla :: getTipoNuevoItem (hacerComprobaciones bool) {
+    int tmp, indice = -1;
+    bool Aprobado = false;
+    hacer{
+        tmp = rand ()% 1200;
+        si (tmp <10 && tmp> = 0 &&! bombasMaxLanzado) {// 0,8% Probabilidades de Aparecer
+            = indice de artículos :: ITEM_BOMBA_MAX; 
+            bombasMaxLanzado = true;
+        }
+        else if (tmp <20 && tmp> = 10 &&! alcanceMaxLanzado) {// 0,8%
+            = indice de artículos :: ITEM_ALCANCE_MAX; 
+            alcanceMaxLanzado = true;
+        }
+        else if (tmp <120 && tmp> = 20) = indice de artículos :: ITEM_ALCANCE; // 8%
+        else if (tmp <180 && tmp> = 120) = indice de artículos :: ITEM_BOMBA; // 4%
+        else if (tmp <280 && tmp> = 180) indice = artículo :: ITEM_ATRAVIESA_PAREDES; // 8% 
+        else if (tmp <330 && tmp> = 280) = indice de artículos :: ITEM_PROTECCION; // 4% 
+        else if (tmp <430 && tmp> = 330) = indice de artículos :: ITEM_ALEATORIO; // 8%
+        else if (tmp <480 && tmp> = 430) = indice de artículos :: ITEM_CORAZON; // 4%
+        else if (tmp <530 && tmp> = 480) = indice de artículos :: ITEM_ATRAVIESA_BOMBAS; // 4%
+        else if (tmp <580 && tmp> = 530 &&! patinesLanzados) {// 4% 
+            = indice de artículos :: ITEM_PATINETA; 
+            patinesLanzados = true;
+        }
+        Si (TMP> = 0 && tmp <580 && indice = - 1!) Aprobado = true;
+        
+    } While (Aprobado!);
+
+    si (hacerComprobaciones && mapa-> getNumItems ()> = 1) {
+            mapa-> setNumItems (mapa-> getNumItems () - 1); 
+    }
+    indice de retorno;
+}
+
+void JuegoBatalla :: estadoPlay () {
+    Uint8 * Teclas = SDL_GetKeyState (NULL); // se obtiene el estado real del teclado
+
+    si (pausado) {
+            sprites-> actualización (Teclas);
+            clockTick-> update ();            
+            / * SI SE ACABO EL TIEMPO * /
+            if (! muertosPorTiempo && clockTick-> getMiliSegundos ()> = min) { 
+                for (int i = 0; i <_PLAYERS; i ++) {
+                    si (refeSprites [REPRODUCTOR] [i] && isActivo (REPRODUCTOR, i)) {
+                        static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> cambiarEstado (Muriendo);
+                        static_cast <jugador> * (refeSprites [Player] [i]) -> setVidas (0);
+                    }
+                }
+                muertosPorTiempo = true;
+            }
+                
+            / * SI SE ACERCA EL TIEMPO PARA ACABAR * /
+            si (clockTick-> getMiliSegundos ()> min / 3 &&! repro_war) {
+                playSonido (SND_WARNING_TIME);
+                repro_war = true;
+            }
+
+            int id_activo = -1;
+            int total_activos = 0;
+
+            total_activos = getActivos (REPRODUCTOR, id_activo);
+
+            si (total_activos == 1) {
+                static char msg_ganador [20];
+                batallasGanadas [id_activo] ++;
+                if ((id_lider_ganadas == PLAYER_NONE) || (id_lider_ganadas! = PLAYER_NONE && batallasGanadas [id_activo]> batallasGanadas [id_lider_ganadas]))
+                        id_lider_ganadas = (IdPlayer) id_activo;
+                else if (id_lider_ganadas! = PLAYER_NONE && id_lider_ganadas! = id_activo && batallasGanadas [id_activo] == batallasGanadas [id_lider_ganadas])
+                        id_lider_ganadas = PLAYER_NONE;
+                Juego-> cambiarInterfaz (nuevos JuegoMostrarGanadas (juego, este, batallasGanadas));
+                
+                si (batallasGanadas [id_activo]> = vic) {
+                    sprintf (msg_ganador, "! ¡REPRODUCTOR% d gano", id_activo + 1);
+                    displayMensage (msg_ganador);
+                    _Quit = true;
+                }más{
+                    setMapaPlay (idTerrenoActual);
+                }
+            } Else if (total_activos == 0) {
+                charlas msg_ganador [20];
+                sprintf (msg_ganador, "empate");
+                displayMensage (msg_ganador);
+                setMapaPlay (idTerrenoActual);
+            }
+
+      
+    } // Fin if (! Pausado)
+    
+    controlaPausa (Teclas);
+}
+void JuegoBatalla :: salir () {
+    _Quit = true;
+    juego-> cambiarInterfaz (nuevo menú (juego));
+
+}
+
+anulará JuegoBatalla :: drawBarra (SDL_Surface pantalla *) {
+    Char tmp [50];
+    
+    dibujar_objeto (juego-> getImagen (IMG_TABLERO), 0, mapa-> getYPanel (), pantalla);
+
+    // PLAYER_1
+    imprimir_desde_grilla (! juego-> getImagen (IMG_CARAS_BOMBERMAN), (refeSprites [REPRODUCTOR] [PLAYER_1] && isActivo (jugador, PLAYER_1)) + 2 * PLAYER_1, pantalla, 1,24,1,10,0);
+
+    dibujar_objeto (juego-> getImagen (IMG_CUADRO_PEQUENIO), 15,21, pantalla);
+
+    / * Dibujamos LAS VIDAS Restantes * /
+    if (refeSprites [REPRODUCTOR] [PLAYER_1] && isActivo (jugador, PLAYER_1)) {
+        sprintf (tmp, "% d", static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_1]) -> getVidas ());
+    	imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_3), 15,24, tmp, STR_ESTENDIDA);
+    }
+
+    // PLAYER_2
+    imprimir_desde_grilla (! juego-> getImagen (IMG_CARAS_BOMBERMAN), (refeSprites [REPRODUCTOR] [PLAYER_2] && isActivo (jugador, PLAYER_2)) + 2 * PLAYER_2, pantalla, 32,24,1,10,0);
+
+    dibujar_objeto (juego-> getImagen (IMG_CUADRO_PEQUENIO), 48,21, pantalla);
+
+    / * Dibujamos LAS VIDAS Restantes * /
+    if (refeSprites [REPRODUCTOR] [PLAYER_2] && isActivo (jugador, PLAYER_2)) {
+        sprintf (tmp, "% d", static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_2]) -> getVidas ());
+    	imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_3), 48,24, tmp, STR_ESTENDIDA);
+    }
+
+    // PLAYER_3
+    imprimir_desde_grilla (! juego-> getImagen (IMG_CARAS_BOMBERMAN), (refeSprites [REPRODUCTOR] [PLAYER_3] && isActivo (jugador, PLAYER_3)) + 2 * PLAYER_3, pantalla, 65,24,1,10,0);
+
+    dibujar_objeto (juego-> getImagen (IMG_CUADRO_PEQUENIO), 80,21, pantalla);
+
+    / * Dibujamos LAS VIDAS Restantes * /
+    if (refeSprites [REPRODUCTOR] [PLAYER_3] && isActivo (jugador, PLAYER_3)) {
+        sprintf (tmp, "% d", static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_3]) -> getVidas ());
+    	imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_3), 80,24, tmp, STR_ESTENDIDA);
+    }
+
+    // PLAYER_4
+    imprimir_desde_grilla (juego-> getImagen (IMG_CARAS_BOMBERMAN), (refeSprites [REPRODUCTOR] [PLAYER_4] && isActivo (jugador, PLAYER_4)) + 2 * PLAYER_4, pantalla, 253,24,1,10,0!);
+
+    dibujar_objeto (juego-> getImagen (IMG_CUADRO_PEQUENIO), 270,21, pantalla);
+
+    / * Dibujamos LAS VIDAS Restantes * /
+    if (refeSprites [REPRODUCTOR] [PLAYER_4] && isActivo (jugador, PLAYER_4)) {
+        sprintf (tmp, "% d", static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_4]) -> getVidas ());
+    	imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_3), 271,23, tmp, STR_ESTENDIDA);
+    }
+
+    // PLAYER_5
+    imprimir_desde_grilla (juego-> getImagen (IMG_CARAS_BOMBERMAN), (refeSprites [REPRODUCTOR] [PLAYER_5] && isActivo (jugador, PLAYER_5)) + 2 * PLAYER_5, pantalla, 288,24,1,10,0!);
+
+    dibujar_objeto (juego-> getImagen (IMG_CUADRO_PEQUENIO), 304,21, pantalla);
+
+    / * Dibujamos LAS VIDAS Restantes * /
+    if (refeSprites [REPRODUCTOR] [PLAYER_5] && isActivo (jugador, PLAYER_5)) {
+        sprintf (tmp, "% d", static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_5]) -> getVidas ());
+    	imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_3), 305,23, tmp, STR_ESTENDIDA);
+    }
+
+    si (id_lider_ganadas! = PLAYER_NONE)
+        imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN_GRANDES),id_lider_ganadas,screen,154,-10,1,5,0);
+    
+    dibujar_objeto (juego-> getImagen (IMG_CUADRO_GRANDE), 137,21, pantalla);
+    
+    si (clockTick) {
+        min_ static char [3], seg [3], Tiempo [6];
+    
+        sprintf (min _, "% 2d", (min-clockTick-> getMiliSegundos ()) / 60);
+        si (min_ [0] == '') min_ [0] = '0';
+        sprintf (SEG, "% 2d", mín-clockTick-> getMiliSegundos () - (min-clockTick-> getMiliSegundos ()) / 60 * 60);
+        si (seg [0] == '') seg [0] = '0';
+        sprintf (Tiempo, "% s:% s", min_, seg);
+    
+    	imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_6), \
+    						142,24, Tiempo, STR_MAX_ESTENDIDA);
+    }
+}
+JuegoBatalla :: ~ JuegoBatalla () {
+    #ifdef DEBUG
+        cout << "Destructor de JuegoBatalla:" << esta << endl;
+    #terminara si
+}
+
+/ *
+    cout << "1.1.1" << endl;
+juego_dibujar_kills void (* Juego juego, pantalla SDL_Surface *) {
+     Char tmp [50];
+    dibujar_objeto (juego->> galeria- tabs_kills, 0,0, pantalla);
+    int i;
+    
+    for (i = 0; i <_PLAYERS; i ++) {
+        Dibujamos el reproductor de imprimación
+        (! Juego-> galeria-> grilla_caras_bomberman, (i == 0) + sort_kills [i] * 2, pantalla, 39,67 + 29 * i, 1,10,0) imprimir_desde_grilla;
+        Dibujamos el jugador
+        sprintf (tmp, "jugador% d", sort_kills [i] +1);
+       	imprimir_palabra (pantalla, partidas> galeria-> grilla_fuente_1,58,69 + 28 * i, tmp, STR_NORMAL);
+       	
+        Número de matadas
+        sprintf (tmp, "% d", matadas [sort_kills [i]]);
+       	imprimir_palabra (pantalla, partidas> galeria-> grilla_fuente_3,174,69 + 28 * i, tmp, STR_ESTENDIDA);
+     	
+        Número de mata
+        sprintf (tmp, "% d", mata [sort_kills [i]]);
+       	imprimir_palabra (pantalla, partidas> galeria-> grilla_fuente_3,248,68 + 28 * i, tmp, STR_ESTENDIDA);
+    }
+
+}
+
+
+
+
+juego_preparar_kills void (* Juego JUEGO) {
+     mostrar_kills = 1;
+     sort_array (matadas, sort_kills);
+}
+* /
+
+// JUEGO HISTORIA 
+
+# include "juego_historia.hpp"
+
+JuegoHistoria :: JuegoHistoria (* GameManager juego): Juego (juego) {
+    / * Inicializa las referencias y pone todo para que se inicialize El juego * /
+    #ifdef DEBUG
+    cout << "Constructor de JuegoHistoria:" << esta << endl;
+    #terminara si
+
+    EjeX = 0;
+    EjeY = 0;
+    mapa = nuevo mapa (este);
+    mapa-> setImgTiles (juego-> getImagen (IMG_TILES));
+
+    totalSprite [REPRODUCTOR] = 2;
+    crearReferencias ();
+    refeSprites [REPRODUCTOR] [PLAYER_1] = new jugador (esto, PLAYER_1, X_INIT_PLAYER_1, Y_INIT_PLAYER_1,3,3);
+    if (! refeSprites [REPRODUCTOR] [PLAYER_1])
+        cout << "Advertencia - No se Pudo Crear el jugador 1" << endl;
+    refeSprites [REPRODUCTOR] [PLAYER_2] = new jugador (esto, PLAYER_2, X_INIT_PLAYER_2, Y_INIT_PLAYER_2);
+    if (! refeSprites [REPRODUCTOR] [PLAYER_2])
+        cout << "Advertencia - No se Pudo Crear el jugador 2" << endl;
+    static_cast <jugador> * (refeSprites [REPRODUCTOR] [PLAYER_2]) -> setEnPantalla (false); / * Desactivamos el jugador2 * /
+    spriteActivos [REPRODUCTOR] = 1; / * Solo estara activo el jugador 1 * /
+    sprites-> add (refeSprites [REPRODUCTOR] [PLAYER_1]); / * Lo agregamos al Grupo * /
+    mayor_puntaje = 0;
+    setMapaPlay (1, false); / * Se empezara from jugar el Nivel 1 * /
+    static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_2]) -> Desactivar (); / * Desactivamos el jugador2 * /
+    
+}
+
+JuegoHistoria vacío :: setMapaPlay (int id_nivel, reiniciar_jugadores Bool) {
+    Char ruta1 [50], ruta2 [50], ruta3 [50];
+
+    si (id_nivel <1) id_nivel = 1;
+
+    si (id_nivel <MAX_NIVEL) {
+        si (clockTick) borrar clockTick;
+        clockTick = new TimeController ();
+        clockTick-> setTicksPerdidos (4);
+
+        clearSprites ();
+        for (int i = PLAYER_1; i <= PLAYER_2; i ++) {
+            si (isActivo (REPRODUCTOR, i)) {
+                if (reiniciar_jugadores) {
+                    static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> Reiniciar ();
+                }más{
+                    static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> posicionInicial ();
+                    static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> setProteccion (10);
+                }
+            }
+        }
+    
+        sprintf (ruta1, "datos / Niveles / historia / nivel_% d.map", id_nivel);
+        sprintf (ruta2, "datos / Niveles / historia /% d.txt", id_nivel);
+        mapa-> cargarDeArchivoBin (ruta1, ruta2);
+        mapa-> setEjeVisualizacion (mapa-> getEjeX (), mapa-> getEjeY ());
+        mapa-> setItems ();
+        mapa-> setEnemigos ();
+        mens char [50];
+        sprintf (para hombre, "NIVEL% d", id_nivel);
+        displayMensage (para hombre); // Se presenta el MENSAGE con el NiVel real
+        repro_war = false; 
+        playSonido ((CodeMusicSonido) (4 + rand ()% 1));
+        n_actual = id_nivel;
+        p_abierta = false;
+        patinesLanzados = false;
+        bombasMaxLanzado = false;
+        alcanceMaxLanzado = false;
+    }más{
+        displayMensage ( "Te terminaste el juego: P, ¡FELICIDADES!"); // Se presenta el MENSAGE Con ​​El Nivel real
+        _Quit = true;
+    }
+}
+
+JuegoHistoria vacío :: aumentarNivel () {
+    bono int = tiempo (0) -getSegundosInicioNivel ();
+
+    for (int i = 0; i <= PLAYER_2; i ++) {
+        si (isActivo (REPRODUCTOR, i)) {
+            static_cast <jugador> * (refeSprites [Player] [i]) -> (setPuntaje static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> getPuntaje () + bono);
+            static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> setEntroPuerta (false);
+            static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> setProteccion (10);
+            static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> cambiarEstado (Parado);
+        }
+    }
+    setMapaPlay (n_actual + 1, false);
+}
+
+
+
+JuegoHistoria vacío :: estadoPlay () {
+    Uint8 * Teclas = SDL_GetKeyState (NULL); // se obtiene el estado real del teclado
+    si (pausado) {
+        sprites-> actualización (Teclas);
+            
+        / * JUGADORES SI HAY NO ACTIVOS * /
+        if (! isActivo (REPRODUCTOR, PLAYER_1) &&! isActivo (REPRODUCTOR, PLAYER_2)) {
+            displayMensage ( "game over");
+           _Quit = true;
+        }
+        
+         clockTick-> update ();
+        / * SI SE ACABO EL TIEMPO * /
+        si (clockTick-> getMiliSegundos ()> = _ TIME_POR_NIVEL) 
+            setMapaPlay (n_actual, true);    
+            
+        / * SI SE ACERCA EL TIEMPO PARA ACABAR * /
+        si (clockTick-> getMiliSegundos () == _ TIME_POR_NIVEL-50 &&! repro_war) {
+            playSonido (SND_WARNING_TIME);
+            repro_war = true;
+        }
+        
+        / * SI ALGUN JUGADOR PRESIONO INICIO Y ESTABA MUERTO * /
+        for (int i = 0; i <= PLAYER_2; i ++)
+            si (isActivo (REPRODUCTOR, i) && static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> IsPressed (TECLA_START, Teclas)) {
+                if (static_cast <jugador> * (refeSprites [Player]) [i!] -> getVidas ()> 0) {
+                    static_cast <jugador> * ([i]! refeSprites [Jugador]) -> setVidas (i [!] static_cast <jugador> * (refeSprites [Player]) -> (getVidas) - 1);
+                    static_cast <jugador> * (refeSprites [REPRODUCTOR] [i]) -> Reiniciar ();
+                    static_cast <jugador> * (refeSprites [Player] [i]) -> setVidas (0);
+                    hold_start = true; // Que no controlamos Mantenga La Tecla presionada
+                    sprites-> add (refeSprites [Jugador] [i]);
+                    romper;
+                }
+            }
+    }
+    controlaPausa (Teclas);
+
+}
+
+JuegoHistoria inline void :: Salir () {
+    _Quit = true;
+    juego-> cambiarInterfaz (nuevo menú (juego));
+}
+
+
+JuegoHistoria vacío :: drawBarra (pantalla SDL_Surface *) {
+    Char tmp [50];
+
+    dibujar_objeto (juego-> getImagen (IMG_TABLERO), 0, mapa-> getYPanel (), pantalla);
+    
+    
+    // Dibujamos EL TIEMPO
+    dibujar_objeto (juego-> getImagen (IMG_CUADRO_GRANDE), 129,3 + mapa-> getYPanel (), pantalla);
+    si (clockTick) {
+        static char min [3], seg [3], Tiempo [6];
+    
+        sprintf (min, "% 2d", (_ TIME_POR_NIVEL-clockTick-> getMiliSegundos ()) / 60);
+        si (min [0] == '') min [0] = '0';
+        sprintf(seg,"%2d",_TIME_POR_NIVEL-clockTick->getMiliSegundos()-(_TIME_POR_NIVEL-clockTick->getMiliSegundos())/60*60);
+        si (seg [0] == '') seg [0] = '0';
+        sprintf (Tiempo, "% s:% s", min, seg);
+    
+    	imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_6), \
+    						136,6 + mapa-> getYPanel (), Tiempo, STR_MAX_ESTENDIDA);
+    }
+    
+    si (isActivo (REPRODUCTOR, PLAYER_1)) {
+        
+        // Dibujamos LAS VIDAS
+        dibujar_objeto (juego-> getImagen (IMG_CUADRO_PEQUENIO), 59,5 + mapa-> getYPanel (), pantalla);
+        sprintf (tmp, "% d", static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_1]) -> getVidas ());
+    	imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_1), 59,8 + mapa-> getYPanel (), tmp, STR_NORMAL);
+        
+        // Dibujamos La Cara
+        imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN_GRANDES),PLAYER_1,screen,28,-8+mapa->getYPanel(),1,5,0);
+
+        // Dibujamos EL puntaje
+        dibujar_objeto (juego-> getImagen (IMG_CUADRO_MEDIANO), 4,23 + mapa-> getYPanel (), pantalla);
+        sprintf (tmp, "% d", static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_1]) -> getPuntaje ());
+        imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_2), 40,24 + mapa-> getYPanel (), tmp, STR_NORMAL);
+    }más{
+        // Dibujamos La Cara
+        imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN_GRANDES),PLAYER_1,screen,28,-8+mapa->getYPanel(),1,5,0);
+
+        dibujar_objeto (juego-> getImagen (IMG_TXT_PRESIONA_START), 5,27 + mapa-> getYPanel (), pantalla);
+    }
+
+    si (isActivo (REPRODUCTOR, PLAYER_2)) {
+        
+        // Dibujamos LAS VIDAS
+        dibujar_objeto (juego-> getImagen (IMG_CUADRO_PEQUENIO), 292,5 + mapa-> getYPanel (), pantalla);
+        sprintf (tmp, "% d", static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_2]) -> getVidas ());
+    	imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_1), 293,8 + mapa-> getYPanel (), tmp, STR_NORMAL);
+        
+        // Dibujamos La Cara
+        imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN_GRANDES),PLAYER_2,screen,262,-8+mapa->getYPanel(),1,5,0);
+
+        // Dibujamos EL puntaje
+        dibujar_objeto (juego-> getImagen (IMG_CUADRO_MEDIANO), 232,23 + mapa-> getYPanel (), pantalla);
+        sprintf (tmp, "% d", static_cast <jugador *> (refeSprites [REPRODUCTOR] [PLAYER_2]) -> getPuntaje ());
+        imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_2), 273,24 + mapa-> getYPanel (), tmp, STR_NORMAL);
+
+    }más{
+        // Dibujamos La Cara
+        imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN_GRANDES),PLAYER_2,screen,262,-8+mapa->getYPanel(),1,5,0);
+
+        dibujar_objeto (juego-> getImagen (IMG_TXT_PRESIONA_START), 225,21 + mapa-> getYPanel (), pantalla);
+    }
+}
+
+JuegoHistoria :: ~ JuegoHistoria () {
+    #ifdef DEBUG
+        cout << "Destructor de JuegoHistoria:" << esta << endl;
+    #terminara si
+}
+
+// JUEGO Mostrar GAN 
+
+# include "juego_mostrar_gan.hpp"
+
+JuegoMostrarGanadas :: JuegoMostrarGanadas (* GameManager juego, JuegoBatalla * matriz, int batallasGanadas []) {_PLAYERS
+    this-> = juego de juego;
+    juegoEnCurso = padre;
+    for (int i = 0; i <_PLAYERS; i ++)
+        this-> batallasGanadas [i] = batallasGanadas [i];
+    conteo = 0;
+    animacion = 1;
+    fondoJuego = SDL_CreateRGBSurface (SDL_SWSURFACE, W_SCREEN, H_SCREEN, 16,0,0, 0, 255);
+    fondoNegro = SDL_CreateRGBSurface (SDL_SWSURFACE, W_SCREEN, H_SCREEN, 16,0,0, 0, 255);
+    SDL_FillRect (fondoNegro, 0,0);
+    dibujar_objeto (SDL_GetVideoSurface (), 0,0, fondoJuego);
+  	SDL_SetAlpha (fondoNegro, SDL_SRCALPHA | SDL_RLEACCEL, conteo);
+  	
+  	animaCuadro = new Animacion (juego-> getImagen (IMG_CUADRO_SCOREBOARD), 3,1, "0,0,1,1,2,2", 80, H_SCREEN);
+  	animaTexto = new Animacion (juego-> getImagen (IMG_TXT_SCOREBOARD), 4,1, "0,0,1,1,2,2,3,3", 90,38);
+
+  	int tmp = 0;
+    for (int i = 0; i <_PLAYERS; i ++) {
+        for (int j = 0; j <batallasGanadas [i]; j ++) {
+            ++ Tmp;
+        }
+    }
+    animaTrofeos = new Animacion * [tmp];
+    totalTrofeosCreados = tmp;
+    tmp = 0;
+    for (int i = 0; i <_PLAYERS; i ++) {
+        for (int j = 0; j <batallasGanadas [i]; j ++) {
+            si (tmp + 1! = totalTrofeosCreados) {
+                animaTrofeos [tmp] = new Animacion(game->getImagen(IMG_TROFEO),1,13,"7,7,7,7,7,7,7,7,7,7,8,8,9,9,9,10,10,10,11,11,12,12,12",86+22*j,H_SCREEN+33*i+8,i);
+            }más{
+                animaTrofeos [tmp] = new Animacion(game->getImagen(IMG_TROFEO),1,13,"0,0,1,1,2,2,2,3,3,4,4,5,5,6,6,7,7,7,7,7,7,7,7,7,7,8,8,9,9,9,10,10,10,11,11,12,12,12",86+22*j,H_SCREEN+35*PLAYER_3+1,i);
+                animaTrofeos [tmp] -> setCuadroDespues (17);            
+            }
+            si (i == PLAYER_3)
+                animaTrofeos [tmp] -> setY (H_SCREEN + 35 * i + 1);
+            else if (i == PLAYER_4)
+                animaTrofeos [tmp] -> setY (H_SCREEN + 35 * i-4);
+            else if (i == PLAYER_5)
+                animaTrofeos [tmp] -> setY (H_SCREEN + 35 * i-7);
+            más
+                animaTrofeos [tmp] -> setY (H_SCREEN + 35 * i + 6);
+            animaTrofeos [tmp] -> setLoop (-1);            
+            ++ Tmp;
+        }
+    }
+}
+JuegoMostrarGanadas vacío :: procesarEvento (* SDL_Event evento) {
+    si (== animacion 3)
+        interruptor (evento-> type) {
+            (! Evento-> jbutton.type = SDL_JOYBUTTONDOWN): caso SDL_JOYBUTTONDOWN si romper;
+            SDL_KEYDOWN caso:
+                salir ();
+            romper;
+            
+        }
+
+}
+JuegoMostrarGanadas vacío :: Update () {
+    si (== animacion 1) {
+        if ((conteo + = 3)> = 255) {
+            animacion = 2;
+            conteo = 0;
+    	   SDL_SetAlpha (fondoNegro, SDL_SRCALPHA | SDL_RLEACCEL, 255);
+        }más
+        	SDL_SetAlpha (fondoNegro, SDL_SRCALPHA | SDL_RLEACCEL, conteo);
+    	
+    } Else if (animacion == 2) {
+        si (animaCuadro-> getY () <= 70) {
+            animacion = 3;
+            conteo = 0;
+        }
+        animaCuadro-> setY (animaCuadro-> getY () - 9);
+        for (int i = 0; i <totalTrofeosCreados; i ++) {
+            animaTrofeos [i] -> setY (animaTrofeos [i] -> getY () - 9);
+        }
+        
+    } Else if (== animacion 3) {
+        si (++ conteo> 20) {
+            animaTrofeos [totalTrofeosCreados-1] -> Actualización ();
+            Conteo = 20;
+        }
+    }
+    animaCuadro-> update ();
+    animaTexto-> update ();
+    for (int i = 0; i <totalTrofeosCreados-1; i ++) {
+        animaTrofeos [i] -> Actualización ();
+    }
+}
+
+JuegoMostrarGanadas vacío :: empate (SDL_Surface pantalla *) {
+    dibujar_objeto (fondoJuego, 0,0, pantalla);
+    dibujar_objeto (fondoNegro, 0,0, pantalla);
+    si (animacion! = 1)
+        animaTexto-> dibujar (pantalla);
+    animaCuadro-> dibujar (pantalla);
+    for (int i = 0; i <totalTrofeosCreados-1; i ++) {
+        animaTrofeos [i] -> empate (pantalla);
+    }
+    si (animacion == 3 && conteo> = 20) animaTrofeos [totalTrofeosCreados-1] -> empate (pantalla);
+    imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN),PLAYER_1*2,screen,64,animaCuadro->getY()+PLAYER_1*35+8,1,10,0);
+    imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN),PLAYER_2*2,screen,64,animaCuadro->getY()+PLAYER_2*35+8,1,10,0);
+    imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN),PLAYER_3*2,screen,64,animaCuadro->getY()+PLAYER_3*35+6,1,10,0);
+    imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN),PLAYER_4*2,screen,64,animaCuadro->getY()+PLAYER_4*35+2,1,10,0);
+    imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN),PLAYER_5*2,screen,64,animaCuadro->getY()+PLAYER_5*35,1,10,0);
+}
+
+JuegoMostrarGanadas vacío :: Salir () {
+    juego-> cambiarInterfaz (juegoEnCurso);
+}
+JuegoMostrarGanadas :: ~ JuegoMostrarGanadas () {
+    #ifdef DEBUG
+        cout << "destructor de JuegoMostrarGanadas" << endl;
+    #terminara si
+    SDL_FreeSurface (fondoJuego);
+    SDL_FreeSurface (fondoNegro);
+    Eliminar animaCuadro;
+    Eliminar animaTexto;
+    for (int i = 0; i <totalTrofeosCreados; i ++) {
+        Eliminar animaTrofeos [i];
+    }
+}
+
+// PRINCIPAL 
+
+# include "game_manager.hpp"
+# include "menu.hpp"
+/ *
+  Nombre: DestructionBombs
+  Copyright: GNU / GPL v3
+  Autor: Manuel Gonzálezmanuelggz
+  Fecha: 21/04/12 22:14
+  Descripción: Remake del Bomberman Famoso
+  Me PUEDES dar tus comentarios por aqui deathmanuel@gmail.com o en mi blog de http://baulprogramas.blogspot.com
+  
+  si no entiendes algo hazmelo saber con gusto te respondere
+  Lineas de codigo this una fecha: 5672
+* /
+
+int main (int argc, char * argv []) {
+    * GameManager juego = new GameManager ();
+    si (juego!) {
+    }
+// Juego-> cambiarInterfaz (nuevo menú (Juego, Menu :: MENU_INICIO));
+    juego-> cambiarInterfaz (nuevo menú (juego));
+    juego-> run ();
+    Eliminar juego;
+    volver EXIT_SUCCESS;
+}
+
+
+// MAPA 
+
+# include "mapa.hpp"
+
+
+
+Mapa :: mapa (Interfaz * _parent, int coorXVis, int coorYVis, SDL_Surface * grillaTiles) {
+    #ifdef DEBUG
+        cout << "Constructor de Mapa:" << esta << endl;
+    #terminara si
+    this-> parent = padre;
+    setEjeVisualizacion (coorXVis, coorYVis);
+    setImgTiles (grillaTiles);
+    datMapa = NULL;
+// MapaCargado = false;
+    tileXPuerta = tileYPuerta = -1;
+}
+
+bool Mapa :: cargarDeArchivoBin (char rutaMapaBin [], char rutaParamText []) {
+    tileXPuerta = tileYPuerta = -1; 
+    if (! cargarMapaDeArchivoBin (rutaMapaBin, tilesMap))
+        falso retorno;
+
+    si (datMapa) borrar datMapa;
+    datMapa = new DatNivel (rutaParamText);
+    si (datMapa!) return false;
+    
+    bloquesMadera = 0;
+    for (int i = 0; i <MAXMAP; i ++)
+        si (tilesMap [i] == BLOQUE_MADERA)
+            bloquesMadera ++;
+    Char rutaT [50];
+    sprintf (rutaT, "datos / imagenes / Objetos / tile_% d.txt", datMapa-> getIdTile () + 1);
+    leerInfTile (rutaT);
+
+    return true;
+}
+
+Mapa vacío :: leerInfTile (Ruta char []) {
+    char key [50], el valor [50];
+    ifstream ftile (RUTA);
+    while (! ftile.eof ()) {
+        ftile >> clave;
+        if (! strcmp (clave "IMG_FONDO")) {
+            ftile >> guerra;
+            if (! strcmp (valor, "FONDO_1"))
+                idFondo = IMG_FONDO_PARTI;
+            else if (! strcmp (valor, "FONDO_2"))
+                idFondo = IMG_FONDO_EDIFICIOS;
+            else if (! strcmp (valor, "FONDO_3"))
+                idFondo = IMG_FONDO_METAL;
+        } Else if (! Strcmp (clave, "EJES")) {
+            ftile >> >> coorXPredVisualizacion coorYPredVisualizacion;
+        } Else if (! Strcmp (clave "Y_TABLERO")) {
+            ftile >> yTablero;
+        }más{
+            ftile >> guerra;
+        }
+    }
+    ftile.close ();
+    
+}
+
+bool Mapa :: cargarMapaDeArchivoBin (char rutaMapaBin [], char * buffer) {
+
+    ifstream fileMapa (rutaMapaBin, en ios :: | ios :: binarios);
+    if (! fileMapa) {
+        cerr << "ADVERTENCIA-Error leyendo archivo de las Naciones Unidas: - Ruta:" << rutaMapaBin << endl;
+        falso retorno;
+    }
+    fileMapa.read (reinterpret_cast <char *> (tampón), MAXMAP);
+    fileMapa.close ();
+    
+    return true;
+}
+
+Mapa vacío :: empate (* SDL_Surface pantalla, SDL_Surface * azulejos, char * mapa, int coorX, int Coory, int idTile)
+{
+    int indice;
+    SDL_Rect dest = {0,0,16,16};
+
+    for (int i = 0; i <FILAS; i ++)
+        for (int j = 0; j <COLUMNAS; j ++) {
+            // Calculo de la s posición del azulejo
+            dest.x = j * + SIZE_TILE coorX;
+            dest.y = i * + SIZE_TILE Coory;
+
+            indice = mapa [i * COLUMNAS + j];
+            si (== indice BLOQUE_ITEM)
+                indice = BLOQUE_MADERA;
+            else if (indice == BLOQUE_ENEMIGO)
+                indice = BLOQUE_PISO;
+            Si (+ dest.x SIZE_TILE> = 0 && dest.y + SIZE_TILE> = 0 && dest.x <&& W_SCREEN dest.y <H_SCREEN)
+        	imprimir_desde_grilla (azulejos, idTile * 4 + indice, pantalla, dest.x, dest.y, 4,4,0);
+        }
+}
+
+int Mapa :: setItems () {
+
+    int itemsPuestos = 0;
+    int random_x = 0, random_y = 0;
+
+    while (<itemsPuestos datMapa-> getNumItems ()) {
+            si (bloquesMadera> 0) {
+                hacer{
+                    random_x = rand ()% COLUMNAS;
+                    random_y = rand ()% FILAS;
+                } While (tilesMap [random_y * COLUMNAS + random_x] = BLOQUE_MADERA!);
+    
+                tilesMap [random_y * COLUMNAS + random_x] = BLOQUE_ITEM;
+                bloquesMadera--;
+                si (tileXPuerta == - 1 || tileYPuerta == - 1) {/ * Si aun no se ha establecido La Puerta nota: La Segunda condicional Nunca de evaluara * /
+                    tileXPuerta = random_x;
+                    tileYPuerta = random_y;
+                }
+                itemsPuestos ++;
+            }
+            más{
+                romper;
+            }
+    }
+    datMapa-> setNumItems (itemsPuestos);
+    itemsPuestos regresar;
+
+}
+int Mapa :: setEnemigos () {
+    int indice, colocados = 0;
+    for (int i = 0; i <FILAS; i ++)
+        for (int j = 0; j <COLUMNAS; j ++) {
+            indice = tilesMap [i * COLUMNAS + j];
+            si (== indice BLOQUE_ENEMIGO) {
+                  tilesMap [i * COLUMNAS + j] = BLOQUE_PISO;
+                  colocados ++;
+// Padre-> addSprite (Globo, 2, j * + W_H_BLOQUE EJE_X, i * + W_H_BLOQUE EJE_Y);
+            }
+        }
+    colocados regresar;
+}
+
+bool Mapa :: isBloqueRompible (int x, int y) {
+
+    int tipoBloque = getTipoBloque (x, y);
+    si (tipoBloque = - 1)
+        volver tipoBloque == == BLOQUE_ITEM || tipoBloque BLOQUE_MADERA;
+    
+    cout << "Advertencia: Acceso al mapa invalido, X:" << x << "Y:" << y << endl;
+    falso retorno;
+}
+
+bool Mapa :: romperBloque (int x, int y) {
+    si (isBloqueRompible (x, y)) {
+        if ((y == getEjeYVisualizacion ()) || \
+           (y!=getEjeYVisualizacion()&&getTipoBloque(x,y-16)!=BLOQUE_PISO&&getTipoBloque(x,y-16)!=BLOQUE_PISO_SOMBRA))
+            tilesMap [getIndiceMapa (x, y)] = BLOQUE_PISO_SOMBRA;
+        más
+            tilesMap [getIndiceMapa (x, y)] = BLOQUE_PISO;
+        si (y + 16! = getEjeYVisualizacion () + getAltoMapa () && getTipoBloque (x, y + 16) == BLOQUE_PISO_SOMBRA)
+            tilesMap [getIndiceMapa (x, y + 16)] = BLOQUE_PISO;
+        return true;
+    }
+    falso retorno;
+}
+
+
+bool Mapa :: colision (SDL_Rect * rect, num_colisiones int *, solo_bloques_duros bool)
+{// Solitario Detecta la colision en Las Esquinas del rect
+
+    int ret = 0;
+    int indice;
+    int izquierda = rect-> x-coorXVisualizacion,
+        TOP = rect-> y-coorYVisualizacion;
+    
+    for (int i = 0; i <4; i ++) {
+        indice = (((top + rect-> h * (i> = 2)) / SIZE_TILE) * COLUMNAS + ((izquierda + (rect-> w * (i = 0 && i = 3))) / SIZE_TILE)!!);
+        
+        if (! solo_bloques_duros) {
+            if(tilesMap[indice]!=BLOQUE_PISO&&tilesMap[indice]!=BLOQUE_PISO_SOMBRA&&tilesMap[indice]!=BLOQUE_ENEMIGO){
+                (* Num_colisiones) ++;
+                ret = i + 1;
+            }
+        } Else if (solo_bloques_duros && tilesMap [indice] == BLOQUE_METAL) {
+            (* Num_colisiones) ++;
+            ret = i + 1;
+        }
+    }
+
+    ret regresar;
+
+}
+Mapa :: ~ mapa () {
+    #ifdef DEBUG
+        cout << "Destructor de Mapa:" << esta << endl;
+    #terminara si
+    Eliminar datMapa;
+}
+
+
+SDL_Surface * Mapa :: getPreviewTerreno (char rutaMapa [], DatNivel * params, SDL_Surface * img_tile, SDL_Surface * imgs_players [], int x, int y) {
+
+    SDL_Surface * = previsualización SDL_GetVideoSurface (), * imagen_redimensionada;
+    Char ruta [50], mapa [MAXMAP + 1], la variable [50];
+    int i;
+    rect_destino SDL_Rect;
+
+// Sprintf (ruta, "datos / Niveles / Batalla /% d.map", ID + 1);
+    cargarMapaDeArchivoBin (rutaMapa, mapa);
+
+    SDL_FillRect (vista previa, 0,0);
+    si (params)
+        dibujar (vista previa, img_tile, mapa, x, y, params-> getIdTile ());
+    más
+        dibujar (vista previa, img_tile, mapa, x, y, 0);
+
+    si (params) {
+// Sprintf (ruta, "datos / Niveles / Batalla /% d.ini", ID + 1);
+
+        for (i = 0; i <_PLAYERS; i ++) {
+            rect_destino.x = params-> getX (i);
+            rect_destino.y = params-> getY (i);
+            imprimir_desde_grilla (imgs_players [i], 6, vista previa, rect_destino.x, rect_destino.y, 1,12,0);
+        }
+
+    }
+
+
+    imagen_redimensionada = (SDL_Surface *) zoomSurface (vista previa, 0,3515, 0,4979, 1);
+    SDL_FreeSurface (vista previa);
+    imagen_redimensionada regresar;
+}
+/ *
+TipoItem Nivel :: getTipoNuevoItem (InterfazJuego entre otras) {
+
+    Tipos TipoItem estáticas [5] = {ITEM_ALCANCE, ITEM_VIDA, ITEM_BOMBA, ITEM_PARED, ITEM_ALEATORIO};
+    static int salido_anterior = -1;
+
+    TipoItem indice = ITEM_ALCANCE;
+
+    if (dat_nivel-> getNumItems ()> = 1) {
+        interruptor (inter) {
+            TIPO_NORMAL caso:
+                 hacer
+                    Tipos indice = [rand ()% 5];
+                 while (indice == salido_anterior);
+                salido_anterior = indice;
+                romper;
+            TIPO_BATALLA caso:
+                hacer{
+                    Tipos indice = [rand ()% 5];
+                } While (indice == || ITEM_PUERTA indice == == ITEM_VIDA || indice ITEM_ALEATORIO); // ningún producto Permitidos en Modo Batalla
+
+                romper;
+            }
+
+       dat_nivel-> setNumItems (dat_nivel-> getNumItems () - 1); 
+    }
+
+    indice de retorno;
+} * /
+
+/ *
+SDL_Surface * Mapa :: getPreviewTerreno (int idTerreno, Interfaz * juego) {
+    SDL_Surface * vista previa;
+    SDL_Surface * img_players [5] = {juego-> getImagen (IMG_PLAYER_1),
+                              juego-> getImagen (IMG_PLAYER_2),
+                              juego-> getImagen (IMG_PLAYER_3),
+                              juego-> getImagen (IMG_PLAYER_4),
+                              juego-> getImagen (IMG_PLAYER_5)};
+                              
+    sprintf (ruta, "datos / Niveles / Batalla /% d.txt", idTerreno + 1);
+    datos2 = new DatNivel (RUTA);
+    sprintf (ruta, "datos / Niveles / Batalla /% d.map", idTerreno + 1);
+    preview=Mapa::getPreviewTerreno(ruta,data2,game->getImagen((CodeImagen)(IMG_TILE_1+data2->getIdTile())),img_players,EJE_X,EJE_Y);
+// cout << "Creada:" << previews_niveles [i] << endl;
+    Eliminar data2;
+}
+* /
+/ *
+Nivel vacío :: cargarFiles (int num_nivel, InterfazJuego entre otras)
+{
+    Char ruta1 [50], ruta2 [50];
+    
+    interruptor (inter) {
+        TIPO_NORMAL caso:
+            sprintf (ruta1, "datos / Niveles / historia / nivel_% d.map", num_nivel);
+            sprintf (ruta2, "datos / Niveles / historia /% d.txt", num_nivel);
+            romper;
+        TIPO_BATALLA caso:
+            sprintf (ruta1, "datos / Niveles / Batalla /% d.map", num_nivel);
+            sprintf (ruta2, "datos / Niveles / Batalla /% d.txt", num_nivel);
+            romper;
+        }
+    cargarFileNivel (mapa, ruta1);
+    
+    si (dat_nivel) eliminar dat_nivel;
+    dat_nivel = new DatNivel (ruta2);
+}
+* /
+
+
+// MENÚ 
+
+# include "menu.hpp"
+
+Menú :: Menú (* GameManager juego):
+    botonGuardar (juego-> getImagen (IMG_BOTON_GUARDAR), esto, 114205), mapa (este) {
+    #ifdef DEBUG
+    cout << "Constructor de menú:" << esta << endl;
+    #terminara si
+    this-> = juego de juego;
+
+    
+    // Ventana 1
+    strcpy (texto [VENTANA_1] [MENU_NUEVO_JUEGO], "NUEVO JUEGO");
+    strcpy (texto [VENTANA_1] [MENU_EDITOR], "Editor");
+    strcpy (texto [VENTANA_1] [MENU_CONFIGURACION], "Configurar");
+    strcpy (texto [VENTANA_1] [MENU_CREDITOS], "creditos");
+    strcpy (texto [VENTANA_1] [MENU_SALIR], "salir");
+
+    // Ventana 2
+    strcpy (texto [VENTANA_2] [MENU_MODO_HISTORIA], "Historia");
+    strcpy (texto [VENTANA_2] [MENU_MODO_MULTIJUGADOR], "MULTIJUGADOR");
+    strcpy (texto [VENTANA_2] [MENU_MODO_CONEXION], "Conexión");
+    strcpy (texto [VENTANA_2] [MENU_REGRESAR], "regresar");
+
+
+    / * Rects para imprimir LOS MENSAGES de la Ventana * /
+    // Ventana 1
+    rectsImpresion [VENTANA_1] [MENU_NUEVO_JUEGO] .x = 38;
+    rectsImpresion [VENTANA_1] [MENU_NUEVO_JUEGO] .y = 77;
+
+    rectsImpresion [VENTANA_1] [MENU_EDITOR] .x = 102;
+    rectsImpresion [VENTANA_1] [MENU_EDITOR] .y = 115;
+
+    rectsImpresion [VENTANA_1] [MENU_CONFIGURACION] .x = 49;
+    rectsImpresion [VENTANA_1] [MENU_CONFIGURACION] .y = 145;
+
+    rectsImpresion [VENTANA_1] [MENU_CREDITOS] .x = 102;
+    rectsImpresion [VENTANA_1] [MENU_CREDITOS] .y = 175;
+
+    rectsImpresion [VENTANA_1] [MENU_CREDITOS] .x = 64;
+    rectsImpresion [VENTANA_1] [MENU_CREDITOS] .y = 175;
+
+    rectsImpresion [VENTANA_1] [MENU_SALIR] .x = 91;
+    rectsImpresion [VENTANA_1] [MENU_SALIR] .y = 200;
+
+    // Ventana 2
+    rectsImpresion [VENTANA_2] [MENU_MODO_HISTORIA] .x = 66;
+    rectsImpresion [VENTANA_2] [MENU_MODO_HISTORIA] .y = 77;
+
+    rectsImpresion [VENTANA_2] [MENU_MODO_MULTIJUGADOR] .x = 42;
+    rectsImpresion [VENTANA_2] [MENU_MODO_MULTIJUGADOR] .y = 115;
+
+    rectsImpresion [VENTANA_2] [MENU_MODO_CONEXION] .x = 66;
+    rectsImpresion [VENTANA_2] [MENU_MODO_CONEXION] .y = 153;
+
+    rectsImpresion [VENTANA_2] [MENU_REGRESAR] .x = 69;
+    rectsImpresion [VENTANA_2] [MENU_REGRESAR] .y = 195;
+
+    // Ventana 3 (multijugador)
+    sprites = nuevo grupo (este);
+
+    btnSubirTiempo = new Boton <Menú> (juego-> getImagen (IMG_BOTON_FLECHA_PEQUE_DERECHA), esto, 194,8);
+    btnSubirVictorias = new Boton <Menú> (juego-> getImagen (IMG_BOTON_FLECHA_PEQUE_DERECHA), esto, 295,8);
+    btnCambiarMapa = new Boton <Menú> (juego-> getImagen (IMG_BOTON_CAMBIAR_MAPA), esto, 160225);
+    btnJugar = new Boton <Menú> (juego-> getImagen (IMG_BOTON_JUGAR_2), esto, 240225);
+    
+    btnSubirTiempo-> setId (MENU_BOTON_SUBIR_TIEMPO);
+    btnSubirVictorias-> setId (MENU_BOTON_SUBIR_VICTORIAS);
+    btnCambiarMapa-> setId (MENU_BOTON_CAMBIAR_MAPA);
+    btnJugar-> setId (MENU_BOTON_JUGAR);
+    
+    btnSubirTiempo-> bindAccion (y Menú :: clickControl);
+    btnSubirVictorias-> bindAccion (y Menú :: clickControl);
+    btnCambiarMapa-> bindAccion (y Menú :: clickControl);
+    btnJugar-> bindAccion (y Menú :: clickControl);    
+    btnJugar-> setVisible (false);
+    
+    animaPlayer [0] = new Animacion (juego-> getImagen (IMG_PLAYER_1), 1,12, "6,6,7,7,8,8", X_INIT_PLAYER_1, Y_INIT_PLAYER_1,0);
+    animaPlayer [1] = new Animacion (juego-> getImagen (IMG_PLAYER_2), 1,12, "6,6,7,7,8,8", X_INIT_PLAYER_2, Y_INIT_PLAYER_2,1);
+    animaPlayer [2] = new Animacion (juego-> getImagen (IMG_PLAYER_3), 1,12, "6,6,7,7,8,8", X_INIT_PLAYER_3, Y_INIT_PLAYER_3,2);
+    animaPlayer [3] = new Animacion (juego-> getImagen (IMG_PLAYER_4), 1,12, "6,6,7,7,8,8", X_INIT_PLAYER_4, Y_INIT_PLAYER_4-20,3);
+    animaPlayer [4] = new Animacion (juego-> getImagen (IMG_PLAYER_5), 1,12, "6,6,7,7,8,8", X_INIT_PLAYER_5, Y_INIT_PLAYER_5,4);
+
+    for (int i = 0; i <_PLAYERS; i ++) {
+        animaPresiona [i] = new Animacion(game->getImagen(IMG_TXT_PRESIONA),2,1,"0,0,1,1",animaPlayer[i]->getX()-9,animaPlayer[i]->getY()+20,i);
+        animaActivado [i] = new Animacion(game->getImagen(IMG_TXT_ACTIVADO),2,1,"0,0,0,1,1,1",animaPlayer[i]->getX()-9,animaPlayer[i]->getY()+20,i);
+        animaPlayer [i] -> setLoop (-1);
+        animaActivado [i] -> setLoop (-1);
+        animaPresiona [i] -> setLoop (-1);
+        sprites-> añadir (animaPresiona [i]);
+    }
+    
+    / * Ventana * 4 /
+
+    // Linea de Tecla Arriba
+    rectConfiguracion [MENU_TECLA_ARRIBA] [MENU_BOTON_CAMBIAR] .x = 190;
+    rectConfiguracion [MENU_TECLA_ARRIBA] [MENU_BOTON_CAMBIAR] .y = 68;
+    rectConfiguracion [MENU_TECLA_ARRIBA] [MENU_BOTON_CAMBIAR] .w = 81;
+    rectConfiguracion [MENU_TECLA_ARRIBA] [MENU_BOTON_CAMBIAR] .h = 18;
+
+
+    rectConfiguracion [MENU_TECLA_ARRIBA] [MENU_CUADRO_MOSTRAR] .x = 93;
+    rectConfiguracion [MENU_TECLA_ARRIBA] [MENU_CUADRO_MOSTRAR] .y = 70;
+
+    rectConfiguracion [MENU_TECLA_ARRIBA] [MENU_TEXTO_MOSTRAR] .x = 27;
+    rectConfiguracion [MENU_TECLA_ARRIBA] [MENU_TEXTO_MOSTRAR] .y = 69;
+
+    // Linea de Tecla Abajo
+    rectConfiguracion [MENU_TECLA_ABAJO] [MENU_BOTON_CAMBIAR] .x = 190;
+    rectConfiguracion [MENU_TECLA_ABAJO] [MENU_BOTON_CAMBIAR] .y = 91;
+    rectConfiguracion [MENU_TECLA_ABAJO] [MENU_BOTON_CAMBIAR] .w = 81;
+    rectConfiguracion [MENU_TECLA_ABAJO] [MENU_BOTON_CAMBIAR] .h = 18;
+
+    rectConfiguracion [MENU_TECLA_ABAJO] [MENU_CUADRO_MOSTRAR] .x = 93;
+    rectConfiguracion [MENU_TECLA_ABAJO] [MENU_CUADRO_MOSTRAR] .y = 93;
+
+    rectConfiguracion [MENU_TECLA_ABAJO] [MENU_TEXTO_MOSTRAR] .x = 27;
+    rectConfiguracion [MENU_TECLA_ABAJO] [MENU_TEXTO_MOSTRAR] .y = 93;
+
+    // Linea de Tecla Izquierda
+    rectConfiguracion [MENU_TECLA_IZQUIERDA] [MENU_BOTON_CAMBIAR] .x = 190;
+    rectConfiguracion [MENU_TECLA_IZQUIERDA] [MENU_BOTON_CAMBIAR] .y = 112;
+    rectConfiguracion [MENU_TECLA_IZQUIERDA] [MENU_BOTON_CAMBIAR] .w = 81;
+    rectConfiguracion [MENU_TECLA_IZQUIERDA] [MENU_BOTON_CAMBIAR] .h = 18;
+
+    rectConfiguracion [MENU_TECLA_IZQUIERDA] [MENU_CUADRO_MOSTRAR] .x = 93;
+    rectConfiguracion [MENU_TECLA_IZQUIERDA] [MENU_CUADRO_MOSTRAR] .y = 112;
+
+    rectConfiguracion [MENU_TECLA_IZQUIERDA] [MENU_TEXTO_MOSTRAR] .x = 27;
+    rectConfiguracion [MENU_TECLA_IZQUIERDA] [MENU_TEXTO_MOSTRAR] .y = 112;
+
+    // Linea de Tecla Derecha
+    rectConfiguracion [MENU_TECLA_DERECHA] [MENU_BOTON_CAMBIAR] .x = 190;
+    rectConfiguracion [MENU_TECLA_DERECHA] [MENU_BOTON_CAMBIAR] .y = 133;
+    rectConfiguracion [MENU_TECLA_DERECHA] [MENU_BOTON_CAMBIAR] .w = 81;
+    rectConfiguracion [MENU_TECLA_DERECHA] [MENU_BOTON_CAMBIAR] .h = 18;
+
+    rectConfiguracion [MENU_TECLA_DERECHA] [MENU_CUADRO_MOSTRAR] .x = 93;
+    rectConfiguracion [MENU_TECLA_DERECHA] [MENU_CUADRO_MOSTRAR] .y = 133;
+
+    rectConfiguracion [MENU_TECLA_DERECHA] [MENU_TEXTO_MOSTRAR] .x = 27;
+    rectConfiguracion [MENU_TECLA_DERECHA] [MENU_TEXTO_MOSTRAR] .y = 133;
+
+
+    // Linea de accion Tecla
+    rectConfiguracion [MENU_TECLA_ACCION] [MENU_BOTON_CAMBIAR] .x = 190;
+    rectConfiguracion [MENU_TECLA_ACCION] [MENU_BOTON_CAMBIAR] .y = 153;
+    rectConfiguracion [MENU_TECLA_ACCION] [MENU_BOTON_CAMBIAR] .w = 81;
+    rectConfiguracion [MENU_TECLA_ACCION] [MENU_BOTON_CAMBIAR] .h = 18;
+
+    rectConfiguracion [MENU_TECLA_ACCION] [MENU_CUADRO_MOSTRAR] .x = 93;
+    rectConfiguracion [MENU_TECLA_ACCION] [MENU_CUADRO_MOSTRAR] .y = 153;
+
+    rectConfiguracion [MENU_TECLA_ACCION] [MENU_TEXTO_MOSTRAR] .x = 27;
+    rectConfiguracion [MENU_TECLA_ACCION] [MENU_TEXTO_MOSTRAR] .y = 153;
+
+    // Linea de inicio Tecla
+    rectConfiguracion [MENU_TECLA_START] [MENU_BOTON_CAMBIAR] .x = 190;
+    rectConfiguracion [MENU_TECLA_START] [MENU_BOTON_CAMBIAR] .y = 173;
+    rectConfiguracion [MENU_TECLA_START] [MENU_BOTON_CAMBIAR] .w = 81;
+    rectConfiguracion [MENU_TECLA_START] [MENU_BOTON_CAMBIAR] .h = 18;
+
+    rectConfiguracion [MENU_TECLA_START] [MENU_CUADRO_MOSTRAR] .x = 93;
+    rectConfiguracion [MENU_TECLA_START] [MENU_CUADRO_MOSTRAR] .y = 173;
+
+    rectConfiguracion [MENU_TECLA_START] [MENU_TEXTO_MOSTRAR] .x = 27;
+    rectConfiguracion [MENU_TECLA_START] [MENU_TEXTO_MOSTRAR] .y = 173;
+
+
+    // Botones párrafo change de jugador
+
+    botonPlayer [PLAYER_1] = new Boton <Menú> (juego-> getImagen (IMG_BOTON_PLAYER_1), este, 3228);
+    botonPlayer [PLAYER_2] = new Boton <Menú> (juego-> getImagen (IMG_BOTON_PLAYER_2), este, 64228);
+    botonPlayer [PLAYER_3] = new Boton <Menú> (juego-> getImagen (IMG_BOTON_PLAYER_3), esto, 125228);
+    botonPlayer [PLAYER_4] = new Boton <Menú> (juego-> getImagen (IMG_BOTON_PLAYER_4), esto, 189228);
+    botonPlayer [PLAYER_5] = new Boton <Menú> (juego-> getImagen (IMG_BOTON_PLAYER_5), esto, 252228);
+
+    botonGuardar.bindAccion (y Menú :: guardarTeclas);
+    for (int i = 0; i <_PLAYERS; i ++)
+        botonPlayer [i] -> bindAccion (y Menú :: cambiarPlayer);
+
+    rect_destino_cara.x = 126;
+    rect_destino_cara.y = 50;
+
+
+    botones_cambiar [MENU_TECLA_ARRIBA] = BOTON_NORMAL;
+    botones_cambiar [MENU_TECLA_ABAJO] = BOTON_NORMAL;
+    botones_cambiar [MENU_TECLA_IZQUIERDA] = BOTON_NORMAL;
+    botones_cambiar [MENU_TECLA_DERECHA] = BOTON_NORMAL;
+    botones_cambiar [MENU_TECLA_ACCION] = BOTON_NORMAL;
+    botones_cambiar [MENU_TECLA_START] = BOTON_NORMAL;
+
+
+// Estado_boton_guardar = BOTON_NORMAL;
+    maxTerrenoBatalla = buscar_dato (RUTA_CONFIG_BASE, "MaxTerreno");
+    player_configurando_teclas = PLAYER_NONE;
+    previewTerreno = NULL;
+    mapa.setImgTiles (juego-> getImagen (IMG_TILES));
+    Limpiar ();
+    updatePreview ();
+    setSelected (0);
+    juego-> playSonido (SND_MENU);
+    dataNivel = NULL ;;
+// CambiarVentana (VENTANA_1);
+
+    fondoVentanaAnterior = SDL_CreateRGBSurface (SDL_SWSURFACE, W_SCREEN, H_SCREEN, 24,0,0, 0, 255);
+    fondoVentanaSiguiente = SDL_CreateRGBSurface (SDL_SWSURFACE, W_SCREEN, H_SCREEN, 24,0,0, 0, 255);
+    fondoNegro = SDL_CreateRGBSurface (SDL_SWSURFACE, W_SCREEN, H_SCREEN, 24,0,0, 0, 0);
+    animacion = false;
+    setDesvanecimiento (-1, VENTANA_1);
+
+}
+Menú vacío :: setDesvanecimiento (int pasado, int Nueva) {
+  	ventanaAnterior = último;
+  	ventanaSiguiente = nueva;
+    nivelAlpha = 0;
+    nAnimacion = 1;
+    si (última == - 1) {
+        nAnimacion = 2;
+        nivelAlpha = 255;
+    }más
+        dibujar_objeto (SDL_GetVideoSurface (), 0,0, fondoVentanaAnterior);
+    si (ventanaSiguiente = - 1) {
+        cambiarVentana (ventanaSiguiente);
+        dibujar (fondoVentanaSiguiente);
+    }
+    SDL_SetAlpha (fondoNegro, SDL_SRCALPHA | SDL_RLEACCEL, nivelAlpha);
+    animacion = true;
+}
+
+Menú vacío :: setSelected (int nuevo) {
+    si (Nuevo <((ventana == VENTANA_1) 5: 4) && Nuevo> = 0)
+        selected = nuevo;
+    juego-> play (SFX_TONO_ACUATICO);
+}
+
+Menú vacío :: cambiarPlayer () {
+    for (int i = 0; i <_PLAYERS; i ++) {
+        si (i = player_configurando_teclas && botonPlayer [i] -> estaPresionado ()) {
+            cambiarPlayerConfi ((IdPlayer) i);          
+            regreso;
+        }
+    }
+}
+Menú vacío :: cambiarPlayerConfi (IdPlayer id) {
+     // Cambia el Estado de las variables de Asociadas Al Cambio de jugador al Que se le configuran las Teclas
+      si (player_configurando_teclas! = PLAYER_NONE) {
+          botonPlayer [player_configurando_teclas] -> setEstado (Boton <Menú> :: NORMAL);
+          botonPlayer [player_configurando_teclas] -> setEnable (true);  
+      }      
+      player_configurando_teclas = id; // guarda el ID del nuevo jugador
+      id_espera_tecla = TECLA_NULA; // Variable Que Dice Sí se espera la pulsación De Una Tecla [del alegría] PARA UN boton del Juego
+      botonPlayer [id] -> setEstado (Boton <Menú> :: PRESIONADO);
+      botonPlayer [id] -> setEnable (false);
+      cargarTeclas (); // carga las Teclas del archivo 
+}
+
+Menú vacío :: cargarTeclas () {
+     // Carga Las jugador Teclas De Una
+    Char str_tmp [40];
+    sprintf (str_tmp, "datos / configuracion / teclado_% d.dat", player_configurando_teclas + 1);
+    control_edit.cargar (str_tmp);
+
+}
+Menú vacío :: guardarTeclas () {
+    Char tmp [40];
+    sprintf (tmp, "datos / configuracion / teclado_% d.dat", player_configurando_teclas + 1);
+    control_edit.guardar (tmp);
+}
+
+Menú vacío :: Limpiar () {
+    cambiarPlayerConfi (PLAYER_1);
+    for (int i = 0; i <_PLAYERS; i ++)
+          player_batalla [i] = false;
+     terrenoActual = 0;
+     minutosEscogidos = 1;
+     victoriasEscogidas = 1;
+}
+Menú vacío :: clickControl (Boton <Menú> * control_click) {
+    selected = control_click-> getId ();
+    clickSelected ();
+}
+
+
+Menú vacío :: cambiarVentana (int nueva_ventana) {
+    Ventana = nueva_ventana;
+    = 0 seleccionadas;
+    SDL_ShowCursor (SDL_DISABLE); // ocultamos el cursor
+    
+    si (== ventana VENTANA_3) {// Si Es La De multijugador
+        SDL_ShowCursor (SDL_ENABLE);
+    }
+    else if (ventana == VENTANA_4) {// Si Es La De configuracion
+        cargarTeclas ();
+        id_espera_tecla = TECLA_NULA;
+        SDL_ShowCursor (SDL_ENABLE);
+// Juego-> cambiarInterfaz (nueva EfectoDesvanecimiento (juego, esto, esto));
+    }
+}
+
+
+Menú vacío :: cambiarTerrenoBatalla (int aum) {
+    terrenoActual + = aum;
+    si (== terrenoActual maxTerrenoBatalla) // Si Es el ultimo
+        terrenoActual = 0; // ponemos El Primero
+    else if (terrenoActual <0)
+        terrenoActual = maxTerrenoBatalla-1; // ponemos el ultimo
+
+}
+
+Menú vacío :: clickSelected () {
+    int tmp;
+
+    interruptor (ventana) {
+        VENTANA_1 caso:
+            conmutador (seleccionado) {
+                MENU_NUEVO_JUEGO caso:
+// CambiarVentana (VENTANA_2);
+                    setDesvanecimiento (VENTANA_1, VENTANA_2);
+                    romper;
+                MENU_EDITOR caso:
+                     juego-> cambiarInterfaz (nuevo Editor (juego));
+                    romper;
+                MENU_CONFIGURACION caso:
+// CambiarVentana (VENTANA_4);
+                    setDesvanecimiento (VENTANA_1, VENTANA_4);
+                    romper;
+                MENU_CREDITOS de caso:
+// CambiarVentana (VENTANA_CREDITOS);
+                    setDesvanecimiento (VENTANA_1, VENTANA_CREDITOS);
+                    romper;
+                MENU_SALIR caso:
+                    setDesvanecimiento (VENTANA_1, -1);
+// Juego-> quit ();
+                    romper;
+                }
+            romper;
+        VENTANA_2 caso:
+            conmutador (seleccionado) {
+                MENU_MODO_HISTORIA caso:
+                    juego-> cambiarInterfaz (nueva JuegoHistoria (juego));
+                    romper;
+                MENU_MODO_MULTIJUGADOR caso:
+                    setDesvanecimiento (VENTANA_2, VENTANA_3);
+// CambiarVentana (VENTANA_3);
+                    romper;
+                MENU_MODO_CONEXION caso:
+                    romper;
+                MENU_REGRESAR caso:
+                    setDesvanecimiento (VENTANA_2, VENTANA_1);
+// CambiarVentana (VENTANA_1);
+                    romper;
+                }
+            romper;
+        VENTANA_3 caso:
+                conmutador (seleccionado) {
+                    PLAYER_1 caso: caso PLAYER_2: PLAYER_3 caso: caso PLAYER_4: PLAYER_5 caso:
+                          player_batalla [seleccionado] = player_batalla [seleccionado]!;
+                          si (player_batalla [seleccionado]) {
+                                sprites-> añadir (animaPlayer [seleccionado]);
+                                sprites-> añadir (animaActivado [seleccionado]);
+                                sprites-> borrado (animaPresiona [seleccionado]);
+                          }más{
+                                sprites-> borrado (animaPlayer [seleccionado]);
+                                sprites-> borrado (animaActivado [seleccionado]);
+                                sprites-> añadir (animaPresiona [seleccionado]);
+                          }
+                          btnJugar-> setVisible (player_batalla [PLAYER_1] + player_batalla [PLAYER_2] + player_batalla [PLAYER_3] + player_batalla [PLAYER_4] + player_batalla [PLAYER_5]> 1);
+                          juego-> play (SFX_TONO_SECO);
+                      romper;
+                    MENU_BOTON_SUBIR_TIEMPO caso:
+                        si (++ minutosEscogidos> 5) minutosEscogidos = 1;
+                        romper;
+                    MENU_BOTON_SUBIR_VICTORIAS de caso:
+                        si (++ victoriasEscogidas> 8) victoriasEscogidas = 1;
+                        romper;
+                    MENU_BOTON_CAMBIAR_MAPA caso:
+                        si (++ terrenoActual == maxTerrenoBatalla) terrenoActual = 0;
+                        updatePreview ();
+                        juego-> play (SFX_TONO_ACUATICO);
+                        romper;
+                    MENU_BOTON_JUGAR caso:
+                        int total_players = player_batalla [PLAYER_1] + player_batalla [PLAYER_2] + player_batalla [PLAYER_3] + player_batalla [PLAYER_4] + player_batalla [PLAYER_5];
+                        si (total_players> = 2) {
+                            Juego-> cambiarInterfaz (nuevos JuegoBatalla (juego, terrenoActual, player_batalla, minutosEscogidos, victoriasEscogidas)); // Iniciamos en Modo Batalla, le pasamos el array con los jugadores Seleccionados por el usuario
+                            juego-> play (SFX_EXPLOSION);
+                        }
+                        romper;
+                }
+            romper;
+            }
+}
+Menú vacío :: updatePreview () {
+    Char ruta1 estática [50], ruta2 [50];
+    sprintf (ruta1, "datos / Niveles / Batalla /% d.map", terrenoActual + 1);
+    sprintf (ruta2, "datos / Niveles / Batalla /% d.txt", terrenoActual + 1);
+    mapa.cargarDeArchivoBin (ruta1, ruta2);
+    mapa.setEjeVisualizacion (mapa.getEjeX (), mapa.getEjeY ());
+
+}
+Menú vacío :: update () {
+    si (animacion!) {
+        interruptor (ventana) {
+                VENTANA_1 caso: caso VENTANA_2:
+                    romper;
+                VENTANA_3 caso: // multijugador
+                    sprites-> update ();
+                    romper;
+                VENTANA_4 caso: // configuracion
+                    romper;
+                VENTANA_CREDITOS caso: // configuracion
+                    romper;
+            }
+    }más{
+        si (nAnimacion == 1 && (nivelAlpha + = 6)> = 255) {
+            nAnimacion = 2;
+            nivelAlpha = 255;
+            si (ventanaSiguiente == - 1) juego-> quit ();
+        } Else if (nAnimacion == 2 && (nivelAlpha- = 6) <= 0) {
+            animacion = false;
+        }
+        SDL_SetAlpha (fondoNegro, SDL_SRCALPHA | SDL_RLEACCEL, nivelAlpha);
+    }
+}
+
+
+Menú vacío :: procesarEvento (* SDL_Event evento) {
+    si (animacion!) {
+        interruptor (ventana) {
+            VENTANA_1 caso: caso VENTANA_2:
+                si (evento-> Tipo == SDL_KEYDOWN) {
+                        interruptor (evento-> key.keysym.sym) {
+                            SDLK_ESCAPE caso:
+                                 si (== ventana VENTANA_2) {
+                                    setDesvanecimiento (-1, VENTANA_1);
+                                 }más{
+                                    setDesvanecimiento (Ventana, -1);
+                                 }
+                                romper;
+                            SDLK_DOWN caso: caso SDLK_UP:
+                                setSelected (seleccionados + (int) pow (-1, evento-> key.keysym.sym-272));
+                                romper;
+                            SDLK_RETURN caso:
+                                clickSelected ();
+                                romper;
+                            defecto:
+                                romper;
+                            }
+                } Else if (evento-> type == SDL_JOYAXISMOTION && evento-> jaxis.type == SDL_JOYAXISMOTION) {
+                        si (evento-> jaxis.axis! = 0) {
+                             si (evento-> jaxis.value> 10) {
+                               setSelected (seleccionado + 1);
+                            } Else if (evento-> jaxis.value <-10) {
+                               setSelected (seleccionado - 1);
+                            }
+                        }
+                } Else if (evento-> type == SDL_JOYBUTTONDOWN) {
+                     si (evento-> jbutton.type == SDL_JOYBUTTONDOWN)
+                        si (evento-> jbutton.button + 1 == 3)
+                                clickSelected ();
+    
+                }
+    
+            romper;
+            VENTANA_3 caso: // Multijugador
+                si (evento-> Tipo == SDL_KEYDOWN) {
+                    interruptor (evento-> key.keysym.sym) {
+                        SDLK_ESCAPE caso:
+                            setDesvanecimiento (-1, VENTANA_2);
+                            Limpiar ();
+                            romper;
+                        SDLK_RETURN caso:
+    						selected = MENU_BOTON_JUGAR;
+    						clickSelected ();
+                            romper;
+                        SDLK_KP1 caso: caso SDLK_KP2: SDLK_KP3 caso: caso SDLK_KP4: SDLK_KP5 caso:
+    						selected = (evento-> key.keysym.sym-SDLK_KP1); // SELECCIONAMOS el jugador con Una fórmula compañera. SDK_1: 49 y SDLK_5: 53
+    						clickSelected ();
+    						romper;
+                        SDLK_1 caso: caso SDLK_2: SDLK_3 caso: caso SDLK_4: SDLK_5 caso:
+    						selected = (evento-> key.keysym.sym-SDLK_1); // SELECCIONAMOS el jugador con Una fórmula compañera. SDK_1: 49 y SDLK_5: 53
+    						clickSelected ();
+                            romper;
+                        SDLK_LEFT caso: caso SDLK_RIGHT:
+    					    selected = MENU_BOTON_CAMBIAR_MAPA;
+    						clickSelected ();
+                            romper;
+                        defecto:
+                            romper;
+                    }
+                }
+                btnSubirTiempo-> procesarEvento (evento);
+                btnSubirVictorias-> procesarEvento (evento);
+                btnCambiarMapa-> procesarEvento (evento);
+                btnJugar-> procesarEvento (evento);
+                romper;
+                
+            VENTANA_4 caso:
+                        si (evento-> type == SDL_JOYBUTTONDOWN && id_espera_tecla> -1) {
+                            si (evento-> jbutton.type == SDL_JOYBUTTONDOWN) {
+                                    control_edit.setKey (id_espera_tecla, (SDLKey) evento-> jbutton.button);
+                                    control_edit.setIsBotonJoystick (id_espera_tecla, true) ;;
+                                    control_edit.setIsDireccionJoystick ((int) id_espera_tecla, false);
+                                    control_edit.setName (id_espera_tecla, SDL_JoystickName (evento-> jbutton.which));
+                                    id_espera_tecla = TECLA_NULA; // dejamos de Esperar una Que El usuario press Una Tecla
+                                }
+    
+                        } Else if (evento-> type == SDL_JOYAXISMOTION && id_espera_tecla> = 0) {
+                                Modificado bool = false;
+                                si (evento-> jaxis.axis == 0) {
+                                     si (evento-> jaxis.value> 0) {
+                                            control_edit.setKey (id_espera_tecla, SDLK_RIGHT);
+                                            Modificado = 1;
+                                        }
+    
+                                     else if (evento-> jaxis.value <0) {
+                                            control_edit.setKey (id_espera_tecla, SDLK_LEFT);
+                                            Modificado = 1;
+                                        }
+                                } Else {
+    
+                                     si (evento-> jaxis.value> 0) {
+                                            control_edit.setKey (id_espera_tecla, SDLK_DOWN);
+                                       Modificado = 1;
+                                    } Else if (evento-> jaxis.value <0) {
+                                            control_edit.setKey (id_espera_tecla, SDLK_UP);
+                                            Modificado = 1;
+                                    }
+                                }
+    
+                                si (Modificado) {
+                                    control_edit.setIsBotonJoystick (id_espera_tecla, falsa) ;;
+                                    control_edit.setIsDireccionJoystick ((int) id_espera_tecla, true);
+                                    control_edit.setName (id_espera_tecla, SDL_JoystickName (evento-> jaxis.which));
+                                    id_espera_tecla = TECLA_NULA;
+                                }
+                        } Else if (evento-> type == SDL_KEYDOWN) {
+                                interruptor (evento-> key.keysym.sym) {
+                                    SDLK_RIGHT caso:
+                                        if (player_configurando_teclas == PLAYER_5) break;
+                                    SDLK_LEFT caso:
+                                        si (evento-> key.keysym.sym == == SDLK_LEFT && player_configurando_teclas PLAYER_1) romper;
+                                        si (== id_espera_tecla TECLA_NULA)
+                                            cambiarPlayerConfi ((IdPlayer) (player_configurando_teclas + (int) pow (-1, evento-> key.keysym.sym-271))); // el pow Es Para Tener 1 o -1 dependiendo de la Tecla, Notar Que Si es SDLK_LEFT sueros -1
+                                        romper;
+    
+                                    SDLK_ESCAPE caso:
+                                        si (id_espera_tecla! = TECLA_NULA) {// Si Se Esperaba la pulsación De Una Tecla
+                                            id_espera_tecla = TECLA_NULA;
+                                        }más{
+                                            setDesvanecimiento (-1, VENTANA_1);
+                                            Limpiar ();
+                                        }
+                                        romper;
+                                    defecto:
+                                        romper;
+                                }
+    
+                                si (id_espera_tecla! = TECLA_NULA) {
+                                    control_edit.setKey (id_espera_tecla, evento-> key.keysym.sym);
+                                    control_edit.setIsBotonJoystick (id_espera_tecla, falsa) ;;
+                                    control_edit.setIsDireccionJoystick ((int) id_espera_tecla, false);
+                                    id_espera_tecla = TECLA_NULA;
+                                }
+                        }
+                        else if (evento-> Tipo == SDL_MOUSEMOTION) {
+                                static int i;
+                                for (i = 0; i <6; i ++) {
+                            		si (punto_en_rect (evento-> motion.x, evento-> motion.y, y rectConfiguracion [i] [MENU_BOTON_CAMBIAR])) {
+                                        si (botones_cambiar [i]! = BOTON_PRESIONADO)
+                                				botones_cambiar [i] = BOTON_RESALTADO;
+                                    }
+                                    más{
+                                        botones_cambiar [i] = BOTON_NORMAL;
+                                    }
+                                }
+    
+                        }
+    
+                    	else if (evento-> type == SDL_MOUSEBUTTONDOWN && evento-> button.button == SDL_BUTTON_LEFT) {
+                                static int i;
+                                for (i = 0; i <6; i ++)
+                            		si (punto_en_rect (evento-> motion.x, evento-> motion.y, y rectConfiguracion [i] [MENU_BOTON_CAMBIAR]))
+                                				botones_cambiar [i] = BOTON_PRESIONADO;
+    
+    
+    
+    
+    
+                    	}
+                    	else if (evento-> type == SDL_MOUSEBUTTONUP && evento-> button.button == SDL_BUTTON_LEFT) {
+                                for (int i = 0; i <6; i ++)
+                            		if((botones_cambiar[i]==BOTON_PRESIONADO)&&punto_en_rect(evento->motion.x,evento->motion.y,&rectConfiguracion[i][MENU_BOTON_CAMBIAR])){
+                                                    id_espera_tecla = (TeclaPlayer) i;
+                                                    botones_cambiar [i] = BOTON_NORMAL;
+                                                    juego-> play (SFX_TONO_ACUATICO);
+                                     }
+                        }
+                        for (int i = 0; i <_PLAYERS; i ++)
+                            botonPlayer [i] -> procesarEvento (evento);
+                        botonGuardar.procesarEvento (evento);
+                    romper;
+            VENTANA_CREDITOS caso: // configuracion
+                si (evento-> Tipo == SDL_KEYDOWN) {
+                     setDesvanecimiento (-1, VENTANA_1);
+                }
+                romper;
+    
+    	        }
+        }
+}
+
+
+Menú vacío :: empate (SDL_Surface pantalla *) {
+    
+    si (animacion!) {
+        SDL_Rect rect = {0,0,0,0};
+    
+        
+        interruptor (ventana) {
+            VENTANA_1 caso: caso VENTANA_2:
+                SDL_BlitSurface (juego-> getImagen (IMG_FONDO_MENU), NULL, pantalla, y rect); // Dibujamos el fondo
+                for (int i = 0; i <5; i ++)
+                    if (! (ventana == VENTANA_2 && i == 4))
+                        imprimir_palabra (pantalla, (i == seleccionado) juego-> getImagen (IMG_FUENTE_8):? juego-> getImagen (IMG_FUENTE_7),
+                                        rectsImpresion [ventana] [i] .x,
+                                        rectsImpresion [ventana] [i] .y,
+                                        texto [ventana] [i], STR_MAX_ESTENDIDA);
+                    
+                romper;
+            VENTANA_3 caso: // multijugador
+                dibujar_objeto (juego-> getImagen ((CodeImagen) mapa.getIdFondo ()), 0,0, pantalla);
+                dibujar_objeto (juego-> getImagen (IMG_TABLERO), 0, mapa.getYPanel (), pantalla); // imprimimos La Barra MENSAGE
+                dibujar_objeto (juego-> getImagen (IMG_CUADRO_PEQUENIO), 177,7 + mapa.getYPanel (), pantalla); // imprimimos La Barra MENSAGE
+                dibujar_objeto (juego-> getImagen (IMG_CUADRO_PEQUENIO), 280,7 + mapa.getYPanel (), pantalla); // imprimimos La Barra MENSAGE
+                dibujar_objeto(game->getImagen(IMG_TXT_PLAYERS_EN_BATALLA),15,24+mapa.getYPanel(),screen);//imprimimos La barra MENSAGE
+                dibujar_objeto(game->getImagen(IMG_TXT_TIEMPO_POR_RONDA),140,24+mapa.getYPanel(),screen);//imprimimos La barra MENSAGE
+                dibujar_objeto (juego-> getImagen (IMG_TXT_VICTORIAS), 261,24 + mapa.getYPanel (), pantalla); // imprimimos La Barra MENSAGE
+                
+                Char tmp estática [50];
+                
+                sprintf (tmp, "% d", minutosEscogidos);
+                imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_6), 178,8 + mapa.getYPanel (), tmp, STR_MAX_ESTENDIDA);
+                sprintf (tmp, "% d", victoriasEscogidas);
+                imprimir_palabra (pantalla, partidas> getImagen (IMG_FUENTE_6), 280,8 + mapa.getYPanel (), tmp, STR_MAX_ESTENDIDA);
+    
+                btnSubirTiempo-> dibujar (pantalla);
+                btnSubirVictorias-> dibujar (pantalla);
+                mapa.draw (pantalla); // imprimimos El Nivel
+                
+                sprites-> dibujar (pantalla);
+                for (int i = 0; i <_PLAYERS; i ++) {
+                    if (! player_batalla [i]) {
+                	   imprimir_desde_grilla (juego-> getImagen ((CodeImagen) (IMG_PLAYER_1 + i)), 6, pantalla, animaPlayer [i] -> getX (), animaPlayer [i] -> getY (), 1, 12, true);
+                       sprintf (tmp, "% d", i + 1);
+                       imprimir_palabra(screen,game->getImagen(IMG_FUENTE_6),animaPlayer[i]->getX()-9+41,animaPlayer[i]->getY()+19,tmp,STR_MAX_ESTENDIDA);
+                    }más{
+                       imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN),i*2,screen,i*16+20,mapa.getYPanel()+2,1,10,0);
+                    }
+                }
+                btnCambiarMapa-> dibujar (pantalla);
+                btnJugar-> dibujar (pantalla);
+                
+                romper;
+            VENTANA_4 caso: // configuracion
+                SDL_BlitSurface (juego-> getImagen (IMG_FONDO_MENU), NULL, pantalla, y rect); // Dibujamos el fondo
+    
+                Char nombre_tecla estática [20];
+                for (int i = 0; i <6; i ++) {
+                    // Imprimimos el boton
+                    imprimir_desde_grilla(game->getImagen(IMG_BOTON_CAMBIAR),(id_espera_tecla==i)?3:botones_cambiar[i],screen,rectConfiguracion[i][MENU_BOTON_CAMBIAR].x,rectConfiguracion[i][MENU_BOTON_CAMBIAR].y,4,1,0);
+    
+                    // Imprimimos La Caja de Mensaje
+                    imprimir_desde_grilla(game->getImagen(IMG_GUI_INPUT_TEXT),id_espera_tecla==i,screen,rectConfiguracion[i][MENU_CUADRO_MOSTRAR].x,rectConfiguracion[i][MENU_CUADRO_MOSTRAR].y,2,1,0);
+    
+    
+                    si (control_edit.isBotonJoystick ((TeclaPlayer) i))
+                        sprintf (nombre_tecla, "alegría% d", control_edit.getKey ((TeclaPlayer) i) + 1);
+                    else if (control_edit.isDireccionJoystick (i))
+                        sprintf (nombre_tecla, "alegría% s", SDL_GetKeyName (control_edit.getKey ((TeclaPlayer) i)));
+                    else if (! strcmp (SDL_GetKeyName (control_edit.getKey ((TeclaPlayer) i)), "llave desconocida")) 
+                        strcpy (nombre_tecla, "desconocido"); 
+                    más
+                        strcpy (nombre_tecla, SDL_GetKeyName (control_edit.getKey ((TeclaPlayer) i)));
+    
+                    // imprimimos La Tecla
+                    imprimir_palabra(screen,game->getImagen(IMG_FUENTE_6),rectConfiguracion[i][MENU_CUADRO_MOSTRAR].x,rectConfiguracion[i][MENU_CUADRO_MOSTRAR].y,nombre_tecla,STR_MAX_ESTENDIDA);
+    
+                    // Imprimimos el texto
+                    imprimir_desde_grilla (juego-> getImagen ((CodeImagen) (+ IMG_TXT_ARRIBA i)),id_espera_tecla==i,screen,rectConfiguracion[i][MENU_TEXTO_MOSTRAR].x,rectConfiguracion[i][MENU_TEXTO_MOSTRAR].y,2,1,0);
+                }
+                for (int i = 0; i <_PLAYERS; i ++)
+                     botonPlayer [i] -> empate (pantalla);
+                     
+    
+    
+                botonGuardar.draw (pantalla);
+                imprimir_desde_grilla(game->getImagen(IMG_CARAS_BOMBERMAN),player_configurando_teclas*2,screen,rect_destino_cara.x,rect_destino_cara.y,1,10,0);
+    
+    
+                romper;
+            VENTANA_CREDITOS caso: // configuracion
+                dibujar_objeto (juego-> getImagen (IMG_FONDO_CREDITOS), 0,0, pantalla);
+                romper;
+            }
+        }más{
+            si (nAnimacion == 1)
+                dibujar_objeto (fondoVentanaAnterior, 0,0, pantalla);
+            else if (nAnimacion == 2)
+                dibujar_objeto (fondoVentanaSiguiente, 0,0, pantalla);
+            dibujar_objeto (fondoNegro, 0,0, pantalla);
+      }
+
+}
+
+
+
+Menú :: ~ Menú () {
+    #ifdef DEBUG
+    cout << "Destructor de menú:" << esta << endl;
+    #terminara si
+    for (int i = 0; i <_PLAYERS; i ++) {
+        Eliminar botonPlayer [i];
+        Eliminar animaPlayer [i];
+        Eliminar animaPresiona [i];
+        Eliminar animaActivado [i];
+    }
+    SDL_FreeSurface (previewTerreno);
+    Eliminar dataNivel;
+    eliminar los sprites;
+    Eliminar btnSubirTiempo;
+    Eliminar btnSubirVictorias;
+    Eliminar btnCambiarMapa;
+    Eliminar btnJugar;
+    SDL_FreeSurface (fondoVentanaAnterior);
+    SDL_FreeSurface (fondoVentanaSiguiente);
+    SDL_FreeSurface (fondoNegro);
+// Eliminar fuente7; 
+}
+
+
+// JUGADOR 
+
+# include "player.hpp"
+
+
+// # Define DEBUG
+
+:: Reproductor de DVD (* Juego juego, IdPlayer de id, int x, int y, int vidasIni, int numBombasIni, int alcanceBombasIni) {
+    #ifdef DEBUG
+    cout << "Constructor de jugador:" << esta << endl;
+    #terminara si
+
+    this-> = juego juego;
+
+    this-> ID = id;
+    
+    rect.w = W_COLISION;
+    rect.h = H_COLISION;
+
+    mantieneStartPresionado = false;
+    self_kill = false;
+	estaProtegido = false;
+
+    idUltimaBomba = -1;
+
+    // Las variables para reiniciarlo
+    this-> alcanBombIni = alcanceBombasIni;
+    this-> numBombasIni = numBombasIni;
+
+    XINI = x;
+    yini = y;
+
+    this-> Vidas = vidasIni;
+
+
+	Estado = ABAJO; // estado del personaje Que Pasara una Ser el anterior (en solitario Para Que mire abajo para)
+    Reiniciar ();
+// CambiarEstado (PARADO);
+    cargarTeclas ();
+// Movimiento (x, y);
+
+}
+
+Jugador vacío :: Reiniciar () {
+    enPantalla = true;
+    Muerto = false;
+    entroPuerta = false;
+    puedeAtravesarBloquesBlandos = false;
+    alcanBomb = alcanBombIni;
+    numBombas = numBombasIni;
+    Velocidad = 1;
+    puedeAtravesarBombas = false;
+    puedeGolpearBombas = false;
+    estaEnfermo = false;
+    corazones = 0;
+    puntaje = 0;
+    cambiarEstado (PARADO);
+    estaProtegido = false;
+    mover (XINI, yini);
+// juego-> resetEjes ();
+// SetProteccion (10);
+
+}
+
+Jugador vacío :: desactivar () {
+	enPantalla = false;
+	juego-> borrado (REPRODUCTOR, getId ());
+}
+
+anular del Jugador :: cargarTeclas () {
+    Char tmp_ruta [40];
+    sprintf (tmp_ruta, "datos / configuracion / teclado_% d.dat", ID + 1);
+
+    if (! control.cargar (tmp_ruta, false)) {// Si No Se Puede cargar archivo de la ONU
+        // Se asignan Teclas por defecto
+        control.setDefaultKeys ((IdPlayer) id);
+    }
+}
+
+
+
+Jugador vacío :: updateRectColision () {
+    // Actualiza el cuadro Que represen al Personaje en la colision
+    rect.x = x + X_COLISION;
+    rect.y = y + Y_COLISION;
+
+}
+
+
+anular del Jugador :: actualización (Uint8 * Teclas) {
+    
+	Avanzar Animacion (); // Avanzamos la animacion
+    updateRectColision ();
+	interruptor (estado) {
+		PARADO caso:
+		    Parado (Teclas);
+			romper;
+
+		IZQUIERDA caso:
+			Izquierda (Teclas);
+			romper;
+
+		caso DERECHA:
+			Derecha (Teclas);
+			romper;
+
+		ARRIBA caso:
+			Arriba (Teclas);
+			romper;
+		ABAJO caso:
+			Abajo (Teclas);
+			romper;
+		Muriendo caso: romper;
+	}
+
+    si (estado! = Muriendo) {
+        if (! estaProtegido) {// si no esta protegido
+            id_explo int estática;
+            if (! juego-> colision (Globo, rect) = - 1) {
+                if (!) corazones
+                    cambiarEstado (Muriendo);
+                más{
+                    setProteccion (10);
+                    corazones--;
+                }
+            (! (Id_explo = juego-> colision (EXPLOSIÓN rect)) = - 1) {} else if
+                if (! corazones) {
+                    cambiarEstado (Muriendo);
+                    si (juego-> getTipoJuego () == TIPO_BATALLA) {
+                        / * Si (juego-> explosiones [id_explo-1] -> Lanzador = id)
+                            juego-> matadas [personajes-> juego-> objetos-> explosiones [id_explo-1] -> Lanzador] ++;
+                        más
+                            juego-> matadas [personajes-> juego-> objetos-> explosiones [id_explo-1] -> Lanzador] -;
+                        juego-> mata [id] ++; * /
+                        si (juego-> getLanzador (EXPLOSIÓN id_explo) = this-> Identificación!);
+    // juego-> matadas [personajes-> juego-> objetos-> explosiones [id_explo-1] -> Lanzador] ++;
+                        más;
+    // Juego-> matadas [personajes-> juego-> objetos-> explosiones [id_explo-1] -> Lanzador] -;
+    // Juego-> mata [id] ++;
+                        
+                    } // Fin "SI tipo de juego es BATALLA"
+                }más{
+                    setProteccion (10);
+                    corazones--;
+                }
+            } // fin "si el id de la explosión no es -1"
+        } Else {// Si està protegido
+            si (juego-> getTick () - tiempoInicioProteccion> = duracionProteccion) {
+                estaProtegido = false;
+            }
+        }
+    } // Fin "Si no muriendo this"
+
+    / * SI COLISIONA CON ALGÚN PUNTO * /
+      int id_item; // almacena La Respuesta de: ¿Con Que elemento this colisionando?
+
+      id_item = juego-> colision (PUNTO, rect);
+      si (id_item = - 1) {// ¿colisiono con uno?
+            int = tipo_item juego-> getTipoItem (id_item);
+            si (== tipo_item artículo :: ITEM_PUERTA) {
+                si (juego-> getActivos (Globo) == 0)
+                    entroPuerta = true;
+            }más{
+                setPuntaje (getPuntaje () + 20);
+                activarPoderItem (tipo_item);
+                juego-> killSprite (PUNTO, id_item);
+                juego-> play (SFX_COGER_ITEM);
+            }
+       }
+
+    / * SI EL REPRODUCTOR DE ESTA MUERTO * /
+    Si (muerto) {// si el jugador this muerto
+        si (- Vidas> = 0) {// si Sigue con Vida
+            Reiniciar ();
+            setProteccion (5);
+            juego-> play (SFX_PIERDE_VIDA);
+        }
+        más
+            inhabilitar();
+    }
+
+
+    si (entroPuerta && juego-> getTipoJuego () == TIPO_NORMAL) {// si entro en la puerta de fin de Nivel
+            / * Entro_puerta = false;
+            Proteccion = true;
+            cambiarEstado (PARADO);
+            int bono = tiempo (0) -juego-> getSegundosInicioNivel ();
+            setPuntaje (getPuntaje () + bono);
+            si (juego-> isActivo (REPRODUCTOR, PLAYER_2)) {
+                juego-> setPuntaje (PLAYER_2, juego-> getPuntaje (PLAYER_2) + bono);
+                juego-> cambiarEstadoPlayer (PLAYER_2, PARADO);
+            }
+            juego-> setNivelPlay (juego-> getNivelActual () + 1, false); * /
+            juego-> aumentarNivel ();
+            
+    }
+}
+
+:: anular jugador activarPoderItem (int tipo) {
+// Cout << "elemento Activando Poder:" << tipo << endl;
+    interruptor (tipo) {
+        caso de artículos :: ITEM_ALCANCE:
+            si (alcanBomb <MAX_ALCANCE_EXPLOSION)
+                alcanBomb ++;
+            romper;
+        caso de artículos :: ITEM_VIDA:
+            Vidas ++;
+            romper;
+        caso de artículos :: ITEM_BOMBA:
+            si (numBombas <MAX_BOMBAS)
+                numBombas ++;
+            romper;
+        caso de artículos :: ITEM_ATRAVIESA_PAREDES:
+            puedeAtravesarBloquesBlandos = true;
+            romper;
+        caso de artículos :: ITEM_ALEATORIO:
+            activarPoderItem (juego-> getTipoNuevoItem (falso));
+            romper;
+        caso de artículos :: ITEM_BOMBA_MAX:
+            numBombas = MAX_BOMBAS;
+            romper;
+        caso de artículos :: ITEM_ALCANCE_MAX:
+            alcanBomb = MAX_ALCANCE_EXPLOSION;
+            romper;
+        caso de artículos :: ITEM_PROTECCION:
+            setProteccion (20);
+            romper;
+        caso de artículos :: ITEM_BOLA_ARROZ:
+            setPuntaje (getPuntaje () + 100);
+            romper;
+        caso de artículos :: ITEM_PASTEL:
+            setPuntaje (getPuntaje () + 120);
+            romper;
+        caso de artículos :: ITEM_PALETA:
+            setPuntaje (getPuntaje () + 120);
+            romper;
+        caso de artículos :: ITEM_BARQUILLA:
+            setPuntaje (getPuntaje () + 50);
+            romper;
+        caso de artículos :: ITEM_MANZANA:
+            setPuntaje (getPuntaje () + 250);
+            romper;
+        caso de artículos :: ITEM_PATINETA:
+            Velocidad = 2;
+            romper;
+        caso de artículos :: ITEM_CORAZON:
+            corazones ++;
+            romper;
+        caso de artículos :: ITEM_ATRAVIESA_BOMBAS:
+            puedeAtravesarBombas = true;
+            romper;
+        caso de artículos :: ITEM_PATEA_BOMBA:
+            puedePatearBombas = true;
+            romper;
+        defecto:
+            romper;
+        }
+}
+
+Jugador vacío :: empate (SDL_Surface pantalla *) {
+    si (estado! = Muriendo)
+    	imprimir_desde_grilla (juego-> getImagen ((CodeImagen) (IMG_PLAYER_1 + id)), cuadro, pantalla, x, y, 1, 12, estaProtegido);
+    más
+    	imprimir_desde_grilla (juego-> getImagen ((CodeImagen) (IMG_PLAYER_1_MURIENDO + id)), cuadro, pantalla, x, y, 1, 4,0);
+// Si (estaProtegido) dibujar_objeto (juego-> getImagen (IMG_FONDO_BLANCO), x, y, pantalla);
+	/ * Dibuja EL CUADRO QUE REPRESENTA LA COLISION DEL PERSONAJE * /
+#ifdef DEBUG
+            updateRectColision ();
+            SDL_FillRect (pantalla, y rect, formato SDL_MapRGB (screening>, 0, 0, 255));
+#terminara si
+}
+
+
+:: anular jugador ponerBomba (Uint8 * Teclas) {
+    TipoSprite conjun_coli [] = {BOMBA, GLOBO, NIVEL, PUNTO};
+    
+    SDL_Rect rect_bomb = {0,0,16,16};
+    updateRectColision ();
+	if (! mantieneStartPresionado && \
+        IsPressed (TECLA_ACCION, Teclas) && \
+        (Juego-> getActivosId (BOMBA, (IdPlayer) id) <numBombas) && \
+        (Juego-> COLISION (conjun_coli, 4, rect) == - 1)) {
+
+                / * Anyadimos la bomba inocentemente * /
+               int id_bomba_colocada=juego->addSprite(BOMBA,(x+7-juego->getEjeXVisual())/16*16+juego->getEjeXVisual(),(y+11-juego->getEjeYVisual())/16*16+juego->getEjeYVisual(),(int)id);
+               / * Si Se logro anyadir * /
+    	       si (id_bomba_colocada = - 1) {
+                    / * Si la bomba Que colocamos colisiona ONU de la estafa personaje la quitamos Porque el JUGADOR CON EL QUE COLISIONA
+                    NO SE MOVERA NUNCA * /
+                    int x, y;
+                   juego-> getPosicion (BOMBA, id_bomba_colocada, x, y);
+                   rect_bomb.x = x;
+                   rect_bomb.y = y;
+    	           si (juego-> colision (REPRODUCTOR, rect_bomb, id) = - 1 || juego-> colision (Globo, rect_bomb) = - 1) {
+                            juego-> soloKill (BOMBA, id_bomba_colocada);
+                            regreso;
+                    }
+                    / * Continuamos Ocurre lo Sino De Arriba * /
+                   idUltimaBomba = id_bomba_colocada;
+                }
+        }
+
+	mantieneStartPresionado = IsPressed (TECLA_ACCION, Teclas);
+}
+
+bool Jugador :: colision (SDL_Rect y rect) {
+
+    updateRectColision ();
+    volver rects_colisionan (this-> rect, rect);
+}
+
+:: anular jugador Parado (UINT8 * Teclas)
+{
+// If (! Es_bot) {
+        si (IsPressed (TECLA_ARRIBA, Teclas))
+            cambiarEstado (ARRIBA);
+    
+        si (IsPressed (TECLA_ABAJO, Teclas))
+            cambiarEstado (ABAJO);
+    
+        si (IsPressed (TECLA_IZQUIERDA, Teclas))
+            cambiarEstado (IZQUIERDA);
+    
+        si (IsPressed (TECLA_DERECHA, Teclas))
+            cambiarEstado (DERECHA);
+
+        ponerBomba (Teclas);
+    /*}más{
+       retardo int estática;
+       Estados static int
+          si (++ retardo> = 100) {
+               delay = 0;
+               
+          }
+    } * /
+
+
+}
+
+:: anular jugador IZQUIERDA (UINT8 * Teclas)
+{
+	mover_ip (-velocidad, 0);
+	if (! IsPressed (TECLA_IZQUIERDA, Teclas))
+    	cambiarEstado (PARADO);
+
+	ponerBomba (Teclas);
+
+
+}
+
+:: anular jugador continúa derecha (Uint8 * Teclas)
+{
+	mover_ip (Velocidad, 0);
+	if (! IsPressed (TECLA_DERECHA, Teclas))
+    	cambiarEstado (PARADO);
+
+	ponerBomba (Teclas);
+}
+
+
+bool Jugador :: IsPressed (TeclaPlayer Tecla, Uint8 * _teclas) {
+    if (! control.isBotonJoystick (Tecla) &&! control.isDireccionJoystick (Tecla)) {
+        _teclas volver [control.getKey (Tecla)];
+
+    }más{
+        for (int i = 0; i <juego-> getJoysActivos (); i ++) {
+            if (! strcmp (SDL_JoystickName (i), control.getName (Tecla))) {// si coinciden con el joistick Con El Que se configuro
+				estado_tecla_joy (control.getKey (Tecla), juego-> getJoy (i)) return;
+             }
+         }
+         falso retorno;
+     }
+}
+Jugador anular :: Arriba (UINT8 * Teclas)
+{
+    mover_ip (0, -velocidad);
+	if (! IsPressed (TECLA_ARRIBA, Teclas))
+    	cambiarEstado (PARADO);
+
+	ponerBomba (Teclas);
+
+
+}
+
+Jugador anular :: Abajo (UINT8 * Teclas)
+{
+	mover_ip (0, velocity);
+	if (! IsPressed (TECLA_ABAJO, Teclas))
+    	cambiarEstado (PARADO);
+
+	ponerBomba (Teclas);
+
+
+}
+
+/ *
+ * Modifica el cuadro de la animación Que se Dębe Mostrar en Pantalla
+ * /
+Jugador vacío :: avanzarAnimacion ()
+{
+	animaciones static int [_ESTADOS] [17] = {\
+		{3,3, 4,4, 5,5, -1}, \
+		{9,9, 10,10, 11,11, -1}, \
+		{6,6, 7,7, 8,8, -1}, \
+		{0,0, 1,1, 2,2, -1}, \
+        {0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3, -1}};
+	si (--delay <1)
+	{
+		delay = 3;
+
+		if (animaciones [estado] [Paso + 1] == -1) {
+		    si (estado! = Muriendo)
+    			Paso = 0;
+    		más
+    		   muerto = 1;
+		}más
+			Paso ++;
+	}
+
+
+	si (estado! = PARADO)
+	   Cuadro = animaciones [estado] [Paso];
+	más
+	   Cuadro = animaciones [estado_anterior] [0];
+
+}
+
+:: anular jugador cambiarEstado (EstadoSprite nuevo)
+{
+    estado_anterior = estado;
+	Estado = nuevo;
+	Paso = 0;
+	delay = 3;
+}
+
+anular del Jugador :: setProteccion (Segundos int) {
+    duracionProteccion = Segundos;
+    tiempoInicioProteccion = juego-> getTick ();
+    estaProtegido = true;
+}
+:: anular jugador mover_ip (int incremento_x, int incremento_y)
+{// Mueve al personaje detectando Alguna colision
+    int temp, num_colision = 0;
+
+    rect.x + = incremento_x;
+    rect.y + = incremento_y;
+    temp = juego-> colision (BOMBA, rect);
+
+    si (temp = -!!! 1 && && temp = idUltimaBomba puedeAtravesarBombas) {/ * Si està Sobre Una bomba Que No Es La Que El Puso * /
+        regreso;
+     } Else if (temp == - 1 && idUltimaBomba = - 1) {
+        idUltimaBomba = -1;
+    }    
+
+    
+    si (rect.x <juego-> getEjeXVisual () || \
+       rect.x + rect.w> juego-> getEjeXVisual () + juego-> getAnchoMapa () || \
+       rect.y <juego-> getEjeYVisual () || \
+       rect.y + rect.h> juego-> getEjeYVisual () + juego-> getAltoMapa)) de retorno (;
+
+    if (!) puedeAtravesarBloquesBlandos
+        temp = juego-> colision (rect, y num_colision, false);
+    más
+        temp = juego-> colision (rect, y num_colision, true);
+    
+    si (temp) {
+        si (num_colision == 1) {// ESTO ES PARA DESPLAZAR EL PERSONAJE UN POCO
+            si (estado == == IZQUIERDA DERECHA || estado) {
+                si (temp == 1 || temp == 2)
+                    y- = 1;
+                más
+                    y + = 1;
+            }más{
+                si (== 1 || temp temp == 4)
+                    x- = 1;
+                más
+                    x + = 1;
+            }
+        }
+    }más{
+        move (x + incremento_x, y + incremento_y);
+    }
+
+}
+:: vacío jugador movimiento (int x, int y) {
+    // Establece al Jugador en la posicion indicada
+
+    this-> x = x;
+    this-> y = y;
+    si (x> W_SCREEN / 3 * 2 && estado == DERECHA) {
+        si (juego-> moveLeftEjeXVisual ()) {
+            this-> x = W_SCREEN / 3 * 2;
+        }
+        
+    }
+    si (x <W_SCREEN / 3 && estado == IZQUIERDA) {
+        si (juego-> moveRightEjeXVisual ()) {
+            this-> x = W_SCREEN / 3;
+        }
+    }
+}
+
+Jugador :: ~ Player () {
+    #ifdef DEBUG
+    cout << "Destructor de jugador:" << esta << endl;
+    #terminara si
+}
+
+
+// UTIL 
+
+# include "util.hpp"
+
+plantilla <nombre de tipo T> bool dato_en_array (T dato, T matriz [], int n) {
+    int i;
+    
+     for (i = 0; i <N; i ++)
+        si (array [i] == Dato)
+           return true;
+           
+     falso retorno;
+     
+}
+
+sort_array vacío (int array_sort [5], int destino_sort [5]) {
+     int i, índice, mayores [5];
+
+     for (i = 0; i <5; i ++) {
+        destino_sort [i] = - 1000;
+        Mayores [i] = - 1000;
+     }
+        
+     
+     para (índice = 0; index <5; índice ++) {
+       for (i = 0; i <5; i ++) {
+             si (array_sort [i]> mayores [índice] &&! dato_en_array (i, destino_sort, 5)) {
+                destino_sort [índice] = i;
+                Mayores [índice] = array_sort [i];
+             }
+       }
+    }
+}
+
+SDL_Surface * cargar_imagen (Ruta char [], int keyclave) {
+	* SDL_Surface imagen;
+
+	imagen = IMG_Load (RUTA);
+
+	si (imagen!) {
+		cout << "No Se Puede cargar:" << Ruta << endl;
+		exit (1);
+	}
+    
+    si (keyclave) {	
+	   SDL_SetColorKey (imagen, SDL_SRCCOLORKEY, \
+				SDL_MapRGB (formato imagen->, 0, 255, 0));
+	}
+	
+    cout << "+ cargando:" << Ruta << endl;
+    Imagen de regreso;
+}
+
+mostrar_error vacío (msg char []) {
+    cerr << "Error:" << << msg "SDL error:" << SDL_GetError () << endl;
+    exit (1);
+}
+
+Mix_Chunk * cargar_sonido (Ruta char []) {
+    Mix_Chunk * Cargado;
+    Cargado = Mix_LoadWAV (RUTA);
+    si (Cargado == NULL) {
+        cerr << "Error cargando sonido:" << << Ruta Mix_GetError () << endl;
+        exit (1);
+    }
+	cout << "+ cargando:" << Ruta << endl;
+	Cargado de regreso;
+}
+Mix_Music * (Ruta const char []) {cargar_musica
+    Mix_Music * Cargado;
+    Cargado = Mix_LoadMUS (RUTA);
+    si (Cargado == NULL) {
+        cerr << "Error cargando musica:" << << Ruta Mix_GetError () << endl;
+        exit (1);
+    }
+	cout << "+ cargando:" << Ruta << endl;
+	Cargado de regreso;
+}
+bool rects_colisionan (SDL_Rect y rect_1, SDL_Rect y rect_2)
+{
+    
+    retorno (((+ rect_1.x rect_1.w)> rect_2.x) && \
+    ((+ Rect_1.y rect_1.h)> rect_2.y) && \
+    ((+ Rect_2.x rect_2.w)> rect_1.x) && \
+    ((+ Rect_2.y rect_2.h)> rect_1.y));
+}
+
+
+imprimir_desde_grilla void (* SDL_Surface src, int cuadro, SDL_Surface * dst, int x_dest, int y_dest, int fil, col int, int alfa)
+{
+	SDL_Rect srcrect, dest_rect = {x_dest, y_dest, 0,0};
+
+	srcrect.w = Src> w / col;
+	srcrect.h = Src> h / fil;
+	srcrect.x = (cuadro col%) * srcrect.w;
+	srcrect.y = (cuadro / col) * srcrect.h;
+
+	si (alfa)
+    	SDL_SetAlpha (src, SDL_SRCALPHA | SDL_RLEACCEL, 150);
+    más
+    	SDL_SetAlpha (src, SDL_SRCALPHA | SDL_RLEACCEL, 255);
+
+	SDL_BlitSurface (src, y srcrect, el horario de verano, y dest_rect);
+}
+
+
+int fps_sincronizar (void)
+{
+	static int t;
+	int estática tl = 0;
+	int = Frecuencia estática 1000-1070;
+	tmp int estática;
+
+	t = SDL_GetTicks ();
+
+	si (t - tl> = frequency)
+	{
+		tmp = (t - tl) / Frecuencia;
+		tl + = tmp * Frecuencia;
+		volver tmp;
+	}
+	más
+	{
+		SDL_Delay (frecuencia - (t - tl));
+		tl + = Frecuencia;
+		volver 1;
+	}
+
+}
+
+
+/ *
+ * Relaciona ONU caracter ONU de la estafa Número entero
+ * /
+int obtener_indice (caracter char, char *) orden_letras
+{
+	int i;
+				
+	for (i = 0; orden_letras [i]; i ++)
+	{
+		si (== caracter orden_letras [i])
+			i volver;
+	}
+	
+	return -1;
+}
+
+
+/ *
+ * Imprime caracter de las Naciones Unidas Sobre la superficie horario de verano (generalmente de pantalla)
+ * /
+int imprimir_letra (SDL_Surface * DST, SDL_Surface * ima, int x, int y, char letra, char *) orden_letras
+{
+	srcrect SDL_Rect;
+	SDL_Rect dstrect = {x, y, 0, 0};
+	
+	int cantidad_de_letras = strlen (orden_letras);
+	
+	srcrect.w = ima-> w / cantidad_de_letras;
+	srcrect.x = srcrect.w * obtener_indice (Letra, orden_letras);
+	srcrect.y = 0;
+	srcrect.h = ima-> h;
+	si (srcrect.x> = 0)
+    	SDL_BlitSurface (ima, y ​​srcrect, el horario de verano, y dstrect);
+	
+	volver ima-> w / cantidad_de_letras;
+}
+
+
+/ *
+ * Imprime Una cadena de Textos completa Sobre la superficie referenciada
+ * POR EL PARÁMETRO imprimación
+ * /
+imprimir_palabra void (* SDL_Surface pantalla, SDL_Surface * ima, int x, int y, const char * cadena, char * orden_letras)
+{
+	int i;
+	int dx = x;
+
+	for (i = 0; Cadena [i]; i ++)
+		dx = + imprimir_letra (pantalla, ima, dx, y, Cadena [i], orden_letras);
+}
+mostrar_msg void (* SDL_Surface pantalla, SDL_Surface * ima, int x, int y, const char * orden_letras, char * formato, ...)
+{
+    Lista va_list;
+    char buffer [1024];
+    va_start (Lista, formato);
+        vsprintf (tampón, formato, Lista);
+        imprimir_palabra (pantalla, ima, x, y, orden_letras, tampón);
+    va_end (Lista);
+}
+
+Uint32 get_pixel (SDL_Surface * ima, int x, int y)
+{
+	int bpp = ima-> Formato> BytesPerPixel;
+	Uint8 * p = (uint8 *) ima-> píxeles + y * ima-> parcela + x * bpp;
+
+	interruptor (BPP)
+	{
+		caso 1:
+			volver * p;
+		
+		Caso 2:
+			volver * (Uint16 *) p;
+
+		Caso 3:
+			si (== SDL_BYTEORDER SDL_BIG_ENDIAN)
+				p volver [0] << 16 | p [1] << 8 | p [2];
+			más
+				p volver [0] | p [1] << 8 | p [2] << 16;
+
+		Caso 4:
+			volver * (Uint32 *) p;
+
+		defecto:
+			return 0;
+	}
+}
+
+
+int buscar_dato (char * Ruta, char * nombre_dato) {
+    ARCHIVO estática * fscript;
+    
+    int valor;
+    Char linea [100], * Identificador;
+    
+    if (! (fscript = fopen (ruta, "r"))) {
+      sprintf (linea, "Error leyendo archivo (Buscar Dato):% s \ n", ruta);
+      mostrar_error (linea);
+    }
+
+    while (! feof (fscript)) {    
+        fgets (linea, 100, fscript);
+        
+        Identificador = strtok (linea ":");
+        if (! strcmp (Identificador, nombre_dato)) {
+            sscanf (strtok (NULL, ""), "% d", y valor);
+            fclose (fscript);
+            valor de retorno;
+        }
+    }
+    fclose (fscript);
+    return -1;
+}
+
+bool estado_tecla_joy (Tecla SDLKey, SDL_Joystick * alegría) {
+	interruptor (Tecla) {
+		SDLK_LEFT caso:
+				volver SDL_JoystickGetAxis (alegría, 0) <-10;
+			romper;
+		SDLK_RIGHT caso:
+				volver SDL_JoystickGetAxis (alegría, 0)> 10;
+			romper;
+		SDLK_UP caso:
+				volver SDL_JoystickGetAxis (alegría, 1) <-10;
+			romper;
+		SDLK_DOWN caso:
+				volver SDL_JoystickGetAxis (alegría, 1)> 10;
+			romper;
+		defecto:
+			volver SDL_JoystickGetButton (alegría, Tecla);
+	}
+}
+dibujar_objeto vacío (SDL_Surface * src, Sint16 x, y Sint16, SDL_Surface * DST) {
+
+    si (src == NULL || DST == NULL) {
+       cerr << "ADVERTENCIA: Intento de Dibujado en funcion: dibujar_objeto sobre o con valor NULL" << endl;
+
+       regreso;
+    }
+
+    SDL_Rect dest = {x, y, Src> w, Src> h};
+    SDL_BlitSurface (src, NULL, el horario de verano, y dest);
+
+}
+
+
+
+invertir_estado EstadoSprite (EstadoSprite estado) {
+    interruptor (estado) {
+        caso DERECHA:
+            volver IZQUIERDA;
+        IZQUIERDA caso:
+            volver DERECHA;
+        ARRIBA caso:
+            volver ABAJO;
+        ABAJO caso:
+            volver ARRIBA;
+        defecto:
+            printf ( "no Implementado párrafo ESE estado:% d \ n", estado);
+            volver ABAJO;
+        }
+}
+
+SDL_VideoInfo (void)
+{
+
+    Propiedades const SDL_VideoInfo *;
+    SDL_Surface * Pantalla;
+    SDL_Rect ** Modos;
+
+    // Variables auxiliares
+    Char controlador [20];
+    int maxlen = 20;
+    int i = 0;
+
+    // Obtenemos la informaciÃ³n del sistema de Alquiler de vídeo
+    Propiedades = SDL_GetVideoInfo ();
+    if (Propiedades == null) {
+	 fprintf (stderr, "no se Pudo Obtener la informaciÃ³n% s \ n",
+		  SDL_GetError ());
+	 exit (1);
+    }
+
+    // Obtenemos los Modos de vídeo Disponibles
+    Modos = SDL_ListModes (NULL, SDL_HWSURFACE);
+
+    printf ( "\ n \ n == MODOS DE VIDEO DISPONIBLES == \ n");
+
+    // Comprobamos Que mÃ © Todos estÃ¡n Disponibles
+    si (== Modos (SDL_Rect **) 0)
+	 printf ( "No se EXISTEN Modos Disponibles \ n");
+    else if (Modos == (SDL_Rect **) - 1)
+	 printf ( "TODOS LOS MODOS Disponibles \ n");
+    else {
+	 printf ( "Lista de Modos Disponibles \ n");
+	 for (i = 0; Modos [i]; i ++)
+	     printf ( "% dx% d \ n", Modos [i] -> w, Modos [i] -> h);
+    }
+
+    // Comprobamos Que El Modo compatible con un mar select
+    si (SDL_VideoModeOK (640, 480, 24, SDL_SWSURFACE) == 0) {
+	 fprintf (stderr, "Modo NO Soportado:% s \ n", SDL_GetError ());
+	 exit (1);
+    }
+
+ 
+    // Una Vez comprobado establecemos el Modo de vídeo
+    Pantalla = SDL_SetVideoMode (640, 480, 24, SDL_SWSURFACE);
+    si (Pantalla == NULL)
+	 printf ( "SDL_SWSURFACE 640x480x24 no es compatible error:.% s \ n",
+		 SDL_GetError ());
+
+
+    // Obtenemos informaciÃ³n del controlador de vídeo
+    printf ( "\ n \ n == informaciÃ³n" N controlador de vídeo == \ n ");
+    SDL_VideoDriverName (conductor, maxlen);
+
+    si (controlador == NULL) {
+	 fprintf (stderr, "No Se Puede Obtener nombre de controlador de vídeo \ n");
+	 exit (1);
+    }
+
+    printf ( "Driver:% s \ n", el conductor);
+
+    
+    // Obtenemos informaciÃ³n Sobre las Capacidades de Nuestro
+    // Sistema RESPECTO una SDL
+    printf ( "\ n == == INFORMACION SDL_INFO \ n \ n");
+    si (propiedades-> == hw_available 1)
+	 printf ( "HW \ Compatible n");
+    más
+	 printf ( "HW no es compatible \ n");
+
+    si (propiedades-> == wm_available 1)
+	 printf ( "Hay Un manejador de ventanas disponible \ n");
+    más
+	 printf ( "No Hay Un manejador de ventanas disponible \ n");
+
+    si (propiedades-> blit_hw == 1)
+	 printf ( "El blitting hardware - hardware estÃ¡ acelerado \ n");
+    más
+	 printf ( "El blitting hardware - hardware NO estÃ¡ acelerado \ n");
+
+    si (propiedades-> blit_hw_CC == 1) {
+	 printf ( "El blitting hardware con transparencias - hardware");
+	 printf ( "estÃ¡ acelerado \ n");
+    }
+    else {
+	 printf ( "El blitting hardware con transparencias - hardware");
+	 printf ( "NO estÃ¡ acelerado \ n");
+    }
+
+    si (propiedades-> blit_sw == 1)
+	 printf ( "El blitting software - hardware estÃ¡ acelerado. \ n");
+    más
+	 printf ( "El blitting software - hardware NO estÃ¡ acelerado. \ n");
+    
+    si (propiedades-> blit_sw_CC == 1) {
+	 printf ( "El software de blitting - transparencias estafadores de hardware");
+	 printf ( "estÃ¡ acelerado \ n");
+    }
+    else {
+	 printf ( "El software de blitting - transparencias estafadores de hardware");
+	 printf ( "NO estÃ¡ acelerado \ n");
+    }
+
+    si (propiedades-> blit_sw_A == 1)
+	 printf ( "El blitting software - hardware con alfa estÃ¡ acelerado \ n");
+    más
+	 printf ( "El blitting software - hardware con alfa NO estÃ¡ acelerado \ n");
+
+    si (propiedades-> blit_fill == 1)
+	 printf ( "El rellenado de Color estÃ¡ acelerado \ n");
+    más
+	 printf ( "El rellenado de color No estÃ¡ acelerado \ n");
+
+    printf ( "La memoria de vídeo Tiene% f MB \ n", (float) propiedades-> video_mem);
+				
+}
+
 
